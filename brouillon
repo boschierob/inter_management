@@ -1,0 +1,54 @@
+for i, row in enumerate(interventions):
+        props = row['properties']
+        page_id = row['id']
+        
+        try:
+            # --- 1. EXTRACTEUR D'ID QONTO ROBUSTE ---
+            qonto_id = None
+            rollup = props.get('ID Qonto (Rollup)', {}).get('rollup', {})
+            
+            if rollup.get('type') == 'array' and rollup.get('array'):
+                first_item = rollup['array'][0]
+                # Notion peut renvoyer 'rich_text', 'title' ou parfois directement 'plain_text' selon la config
+                if 'rich_text' in first_item:
+                    qonto_id = first_item['rich_text'][0].get('plain_text', "").strip()
+                elif 'title' in first_item:
+                    qonto_id = first_item['title'][0].get('plain_text', "").strip()
+                elif 'plain_text' in first_item:
+                    qonto_id = first_item.get('plain_text', "").strip()
+            
+            elif rollup.get('type') == 'string':
+                qonto_id = rollup.get('string', "").strip()
+
+            # Si après tout ça on n'a rien, on logue la structure pour comprendre
+            if not qonto_id:
+                logger.warning(f"Ligne {i+1} (ID: {page_id}) IGNORÉE : ID Qonto introuvable. Structure reçue : {rollup}")
+                lignes_ignorees += 1
+                continue
+
+            # --- 2. RÉCUPÉRATION NOM ET MONTANT (NE PAS OUBLIER !) ---
+            # On récupère le nom du client
+            client_name = props['Client']['title'][0]['plain_text'] if props['Client']['title'] else "Inconnu"
+            # On récupère le montant HT
+            montant_ht = props['Montant HT'].get('number', 0)
+            
+            if montant_ht <= 0:
+                logger.warning(f"Ligne {i+1} ({client_name}) IGNORÉE : Montant HT est de {montant_ht}€.")
+                lignes_ignorees += 1
+                continue
+
+            # --- 3. DATE ET GROUPEMENT ---
+            date_str = props['Date Intervention']['date']['start']
+            mois_annee = datetime.strptime(date_str, "%Y-%m-%d").strftime("%m/%Y")
+            
+            cle = (qonto_id, mois_annee)
+            groupes[cle] += float(montant_ht)
+            noms_clients[qonto_id] = client_name
+            pages_par_groupe[cle].append(page_id) 
+
+            logger.info(f"Ligne {i+1} validée : {client_name} | {montant_ht}€ | Période: {mois_annee}")
+
+        except Exception as e:
+            logger.error(f"Erreur critique ligne {i+1} : {e}")
+            lignes_ignorees += 1
+            

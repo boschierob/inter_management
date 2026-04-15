@@ -1,0 +1,257 @@
+2026-04-14 19:00:54,646 - INFO - === DÉMARRAGE DU SCRIPT DE FACTURATION AUTOMATIQUE ===
+2026-04-14 19:00:54,647 - INFO - Connexion à Notion (Filtre: Status == 'A Facturer')...
+2026-04-14 19:00:55,245 - ERROR - Impossible de joindre Notion : 400 Client Error: Bad Request for url: https://api.notion.com/v1/databases/32d04667171a8061aa50da2a6e4a1fec/query
+2026-04-14 19:00:55,250 - WARNING - Aucune donnée 'A Facturer' trouvée. Fin du script.
+2026-04-14 19:00:55,250 - INFO - === FIN DU SCRIPT ===
+2026-04-14 19:06:45,022 - INFO - === DÉMARRAGE DU SCRIPT DE FACTURATION AUTOMATIQUE ===
+2026-04-14 19:06:45,023 - INFO - Connexion à Notion (Filtre: Status == 'A Facturer')...
+2026-04-14 19:06:45,649 - ERROR - Détail erreur Notion: status option "A Facturer" not found for property "Status". Available options: "A facturer", "En cours", "Facturé", "Payé", "To-do", "In progress", "Complete".
+2026-04-14 19:06:45,650 - INFO - Tentative de secours avec le filtre 'select'...
+2026-04-14 19:06:46,147 - ERROR - Erreur HTTP Notion : 400 Client Error: Bad Request for url: https://api.notion.com/v1/databases/32d04667171a8061aa50da2a6e4a1fec/query
+2026-04-14 19:06:46,148 - WARNING - Aucune donnée 'A Facturer' trouvée. Fin du script.
+2026-04-14 19:06:46,149 - INFO - === FIN DU SCRIPT ===
+2026-04-14 19:08:19,627 - INFO - === DÉMARRAGE DU SCRIPT DE FACTURATION AUTOMATIQUE ===
+2026-04-14 19:08:19,627 - INFO - Connexion à Notion (Filtre: Status == 'A Facturer')...
+2026-04-14 19:08:20,623 - INFO - Succès : 73 interventions récupérées.
+2026-04-14 19:08:20,625 - INFO - Analyse microscopique des lignes...
+2026-04-14 19:08:20,625 - WARNING - Ligne 1 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,626 - WARNING - Ligne 2 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,626 - WARNING - Ligne 3 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,626 - WARNING - Ligne 4 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,626 - WARNING - Ligne 5 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,627 - WARNING - Ligne 6 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,627 - WARNING - Ligne 7 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,627 - WARNING - Ligne 8 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,627 - WARNING - Ligne 9 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,628 - WARNING - Ligne 10 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,628 - WARNING - Ligne 11 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,628 - WARNING - Ligne 12 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,628 - WARNING - Ligne 13 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,629 - WARNING - Ligne 14 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,629 - WARNING - Ligne 15 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,629 - WARNING - Ligne 16 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,629 - WARNING - Ligne 17 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,629 - WARNING - Ligne 18 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,630 - WARNING - Ligne 19 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,630 - WARNING - Ligne 20 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,630 - WARNING - Ligne 21 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,630 - WARNING - Ligne 22 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,630 - WARNING - Ligne 23 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,631 - WARNING - Ligne 24 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,631 - WARNING - Ligne 25 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,631 - WARNING - Ligne 26 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,631 - WARNING - Ligne 27 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,631 - WARNING - Ligne 28 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,632 - WARNING - Ligne 29 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,632 - WARNING - Ligne 30 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,632 - WARNING - Ligne 31 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,632 - WARNING - Ligne 32 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,632 - WARNING - Ligne 33 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,632 - WARNING - Ligne 34 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,633 - WARNING - Ligne 35 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,633 - WARNING - Ligne 36 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,633 - WARNING - Ligne 37 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,633 - WARNING - Ligne 38 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,633 - WARNING - Ligne 39 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,633 - WARNING - Ligne 40 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,633 - WARNING - Ligne 41 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,633 - WARNING - Ligne 42 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,633 - WARNING - Ligne 43 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,634 - WARNING - Ligne 44 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,634 - WARNING - Ligne 45 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,634 - WARNING - Ligne 46 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,634 - WARNING - Ligne 47 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,634 - WARNING - Ligne 48 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,634 - WARNING - Ligne 49 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,634 - WARNING - Ligne 50 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,635 - WARNING - Ligne 51 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,635 - WARNING - Ligne 52 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,635 - WARNING - Ligne 53 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,635 - WARNING - Ligne 54 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,636 - WARNING - Ligne 55 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,636 - WARNING - Ligne 56 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,636 - WARNING - Ligne 57 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,636 - WARNING - Ligne 58 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,637 - WARNING - Ligne 59 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,637 - WARNING - Ligne 60 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,637 - WARNING - Ligne 61 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,637 - WARNING - Ligne 62 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,637 - WARNING - Ligne 63 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,637 - WARNING - Ligne 64 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,637 - WARNING - Ligne 65 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,638 - WARNING - Ligne 66 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,638 - WARNING - Ligne 67 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,638 - WARNING - Ligne 68 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,638 - WARNING - Ligne 69 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,638 - WARNING - Ligne 70 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,638 - WARNING - Ligne 71 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,639 - WARNING - Ligne 72 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,639 - WARNING - Ligne 73 IGNORÉE : ID Qonto manquant.
+2026-04-14 19:08:20,639 - INFO - === FIN DU SCRIPT ===
+2026-04-14 19:13:07,423 - INFO - === DÉMARRAGE DU SCRIPT DE FACTURATION AUTOMATIQUE ===
+2026-04-14 19:13:07,424 - INFO - Connexion à Notion (Filtre: Status == 'A Facturer')...
+2026-04-14 19:13:08,455 - INFO - Succès : 73 interventions récupérées.
+2026-04-14 19:13:08,457 - INFO - Analyse microscopique des lignes...
+2026-04-14 19:13:08,457 - WARNING - Ligne 1 (ID: 34204667-171a-804d-bc38-d8e7699e6612) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,457 - WARNING - Ligne 2 (ID: 34204667-171a-809d-8e7d-f714407c8659) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,458 - WARNING - Ligne 3 (ID: 32d04667-171a-81eb-a6c6-f6491a86abf0) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,458 - WARNING - Ligne 4 (ID: 32d04667-171a-810b-b9f6-f5ee223b879b) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,458 - WARNING - Ligne 5 (ID: 32d04667-171a-8115-bc0b-f94f63d3a527) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,458 - WARNING - Ligne 6 (ID: 32d04667-171a-816e-a8e2-fd873034fdeb) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,458 - WARNING - Ligne 7 (ID: 32d04667-171a-8128-8d43-d1575452f6ac) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,459 - WARNING - Ligne 8 (ID: 32d04667-171a-8139-81a2-c452fbb2a2d3) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,459 - WARNING - Ligne 9 (ID: 32d04667-171a-813a-815b-c7eabf80a855) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,459 - WARNING - Ligne 10 (ID: 32d04667-171a-81cb-86ee-f8f97abbe2ca) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,459 - WARNING - Ligne 11 (ID: 32d04667-171a-81ce-8d47-f02b5dcf87b4) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,460 - WARNING - Ligne 12 (ID: 32d04667-171a-8119-a58c-d19c785daeda) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,460 - WARNING - Ligne 13 (ID: 32d04667-171a-811e-98b9-c5d2a1ec46f2) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,460 - WARNING - Ligne 14 (ID: 32d04667-171a-8156-a5f7-de0e857a1f1a) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,460 - WARNING - Ligne 15 (ID: 32d04667-171a-8193-83a6-f85d31cdde35) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,460 - WARNING - Ligne 16 (ID: 32d04667-171a-81df-aff6-fe65858a40db) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,461 - WARNING - Ligne 17 (ID: 32d04667-171a-811c-8b5b-d70ae90cb5ed) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,461 - WARNING - Ligne 18 (ID: 32d04667-171a-8133-bc99-f501ca47baca) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,461 - WARNING - Ligne 19 (ID: 32d04667-171a-8199-9b8f-d9a109c6e992) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,461 - WARNING - Ligne 20 (ID: 32d04667-171a-81ac-86e1-d1ed27f0a070) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,462 - WARNING - Ligne 21 (ID: 32d04667-171a-812d-8715-fba23d976e0c) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,462 - WARNING - Ligne 22 (ID: 32d04667-171a-8148-8a8d-eb81c207bb24) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,462 - WARNING - Ligne 23 (ID: 32d04667-171a-81d6-a971-fd15af70071e) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,462 - WARNING - Ligne 24 (ID: 32d04667-171a-81f8-a5a3-ea8f0519834a) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,462 - WARNING - Ligne 25 (ID: 32d04667-171a-81f9-96af-f9ece931dc50) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,463 - WARNING - Ligne 26 (ID: 32d04667-171a-8139-b39b-da0fac3fe6b8) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,463 - WARNING - Ligne 27 (ID: 32d04667-171a-813f-ac37-d00063afac57) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,463 - WARNING - Ligne 28 (ID: 32d04667-171a-81a1-a6db-f8009faf7965) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,463 - WARNING - Ligne 29 (ID: 32d04667-171a-81fb-8a3f-fcce7f1e70aa) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,463 - WARNING - Ligne 30 (ID: 32d04667-171a-81fe-8def-dab39c61b6b1) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,464 - WARNING - Ligne 31 (ID: 32d04667-171a-8199-9776-fd77a73057a6) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,464 - WARNING - Ligne 32 (ID: 32d04667-171a-81cc-9e40-f3ef71e2d317) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,464 - WARNING - Ligne 33 (ID: 32d04667-171a-8149-8139-d0d29569cf2e) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,464 - WARNING - Ligne 34 (ID: 32d04667-171a-81d7-ab2b-daf6aae0ac36) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,464 - WARNING - Ligne 35 (ID: 32d04667-171a-81e6-9e56-ed5342737001) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,465 - WARNING - Ligne 36 (ID: 32d04667-171a-81ff-bcc3-c0f859ad3853) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,465 - WARNING - Ligne 37 (ID: 32d04667-171a-810f-a0dd-e648c6b24ddd) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,465 - WARNING - Ligne 38 (ID: 32d04667-171a-8159-b41b-e7825b04887e) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,465 - WARNING - Ligne 39 (ID: 32d04667-171a-8191-a2f0-ea29eca8218e) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,465 - WARNING - Ligne 40 (ID: 32d04667-171a-8144-9513-e1f3dcbf856b) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,466 - WARNING - Ligne 41 (ID: 32d04667-171a-8160-b0a1-d214fd3e44e2) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,466 - WARNING - Ligne 42 (ID: 32d04667-171a-8197-95a1-dc707bfba699) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,466 - WARNING - Ligne 43 (ID: 32d04667-171a-81ff-aeee-d68a9c5a906a) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,466 - WARNING - Ligne 44 (ID: 32d04667-171a-8115-953e-e57e70f4a128) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,466 - WARNING - Ligne 45 (ID: 32d04667-171a-811d-b86e-d97e39f3cfc8) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,467 - WARNING - Ligne 46 (ID: 32d04667-171a-8168-b707-f5cfd9212a45) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,467 - WARNING - Ligne 47 (ID: 32d04667-171a-81af-b653-e31d9484b695) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,467 - WARNING - Ligne 48 (ID: 32d04667-171a-81cb-ae22-c5b2915ac7fe) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,467 - WARNING - Ligne 49 (ID: 32d04667-171a-81da-97e7-f86024af8df2) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,467 - WARNING - Ligne 50 (ID: 32d04667-171a-8145-89c8-c5069653e705) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,468 - WARNING - Ligne 51 (ID: 32d04667-171a-81ab-8f50-d858762148f3) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,468 - WARNING - Ligne 52 (ID: 32d04667-171a-8106-a5d2-d5273e4b708f) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,468 - WARNING - Ligne 53 (ID: 32d04667-171a-811e-ba93-c76ac90db6d1) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,468 - WARNING - Ligne 54 (ID: 32d04667-171a-8127-be8c-c68e2b1105a6) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,468 - WARNING - Ligne 55 (ID: 32d04667-171a-810e-8c97-eb79c3da61ae) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,469 - WARNING - Ligne 56 (ID: 32d04667-171a-812d-9a77-cd3f4c5d73a3) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,469 - WARNING - Ligne 57 (ID: 32d04667-171a-812e-b50b-d504a9728c57) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,469 - WARNING - Ligne 58 (ID: 32d04667-171a-814b-8872-ed029293301e) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,469 - WARNING - Ligne 59 (ID: 32d04667-171a-8176-9b9b-d22cc8bb4acf) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,469 - WARNING - Ligne 60 (ID: 32d04667-171a-81da-96c4-f424013bee28) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,470 - WARNING - Ligne 61 (ID: 32d04667-171a-8142-9527-d98fbb98d49c) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,470 - WARNING - Ligne 62 (ID: 32d04667-171a-814d-8b10-cd6d96a29b09) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,470 - WARNING - Ligne 63 (ID: 32d04667-171a-817c-98dc-d558ef2145d9) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,470 - WARNING - Ligne 64 (ID: 32d04667-171a-81bc-8054-ebc1c98253b0) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,470 - WARNING - Ligne 65 (ID: 32d04667-171a-815b-ba40-e64e7bbea13e) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,471 - WARNING - Ligne 66 (ID: 32d04667-171a-8199-a8c7-ef885836ef4c) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,471 - WARNING - Ligne 67 (ID: 32d04667-171a-81b1-a9ce-ebfc770eebd5) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,471 - WARNING - Ligne 68 (ID: 32d04667-171a-81da-9863-d964754e5b80) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,471 - WARNING - Ligne 69 (ID: 32d04667-171a-8163-ba9e-eb8be6ee83bb) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,471 - WARNING - Ligne 70 (ID: 32d04667-171a-81a4-a1da-dba2d600dbcc) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,471 - WARNING - Ligne 71 (ID: 32d04667-171a-81ab-8c2e-fb155e743060) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,472 - WARNING - Ligne 72 (ID: 32d04667-171a-81b6-bd36-dac3f53d53f6) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,472 - WARNING - Ligne 73 (ID: 32d04667-171a-8126-a415-d4315f8bb38b) IGNORÉE : ID Qonto introuvable. Structure reçue : {}
+2026-04-14 19:13:08,472 - INFO - === FIN DU SCRIPT ===
+2026-04-14 19:15:25,310 - INFO - === DÉMARRAGE DU SCRIPT DE FACTURATION AUTOMATIQUE ===
+2026-04-14 19:15:25,311 - INFO - Connexion à Notion (Filtre: Status == 'A Facturer')...
+2026-04-14 19:15:25,885 - ERROR - Détail erreur Notion: Could not find database with ID: 32d04667-171a-8106-b095-000bfd065644. Make sure the relevant pages and databases are shared with your integration "Facturation Qonto".
+2026-04-14 19:15:25,886 - INFO - Tentative de secours avec le filtre 'select'...
+2026-04-14 19:15:26,381 - ERROR - Erreur HTTP Notion : 400 Client Error: Bad Request for url: https://api.notion.com/v1/databases/32d04667171a8061aa50da2a6e4a1fec/query
+2026-04-14 19:15:26,383 - WARNING - Aucune donnée 'A Facturer' trouvée. Fin du script.
+2026-04-14 19:15:26,384 - INFO - === FIN DU SCRIPT ===
+2026-04-14 19:20:30,225 - INFO - === DÉMARRAGE DU SCRIPT DE FACTURATION AUTOMATIQUE ===
+2026-04-14 19:20:30,225 - INFO - Connexion à Notion (Filtre: Status == 'A Facturer')...
+2026-04-14 19:20:31,383 - INFO - Succès : 73 interventions récupérées.
+2026-04-14 19:20:31,385 - INFO - Analyse microscopique des lignes...
+2026-04-14 19:20:31,386 - INFO - Colonnes détectées par l'API : ['Id Client Qonto (Rollup)', 'Prestation', 'Status', 'Prestation (Relation)', 'Assign', 'prochain passage', 'Client (Relation)', 'ID Facture Qonto', 'Montant HT', 'Prestations (Rollup)', 'Preuves', 'taux TVA', 'Email Facturation', 'Signature Client', 'Date Intervention', 'Description', 'Client']
+2026-04-14 19:20:31,387 - INFO - ✅ Ligne 1 validée : TEST (019d8c99-7bb5-7386-8f5c-5a314e697ddc)
+2026-04-14 19:20:31,388 - WARNING - Ligne 2 : Colonne 'Id Client Qonto (Rollup)' trouvée mais contenu vide.
+2026-04-14 19:20:31,388 - WARNING - Ligne 3 : Colonne 'Id Client Qonto (Rollup)' trouvée mais contenu vide.
+2026-04-14 19:20:31,388 - ERROR - Erreur ligne 4 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,389 - WARNING - Ligne 5 : Colonne 'Id Client Qonto (Rollup)' trouvée mais contenu vide.
+2026-04-14 19:20:31,389 - WARNING - Ligne 6 : Colonne 'Id Client Qonto (Rollup)' trouvée mais contenu vide.
+2026-04-14 19:20:31,389 - ERROR - Erreur ligne 7 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,389 - WARNING - Ligne 8 : Colonne 'Id Client Qonto (Rollup)' trouvée mais contenu vide.
+2026-04-14 19:20:31,390 - ERROR - Erreur ligne 9 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,390 - ERROR - Erreur ligne 10 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,390 - WARNING - Ligne 11 : Colonne 'Id Client Qonto (Rollup)' trouvée mais contenu vide.
+2026-04-14 19:20:31,391 - WARNING - Ligne 12 : Colonne 'Id Client Qonto (Rollup)' trouvée mais contenu vide.
+2026-04-14 19:20:31,391 - ERROR - Erreur ligne 13 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,391 - ERROR - Erreur ligne 14 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,391 - ERROR - Erreur ligne 15 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,391 - ERROR - Erreur ligne 16 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,392 - WARNING - Ligne 17 : Colonne 'Id Client Qonto (Rollup)' trouvée mais contenu vide.
+2026-04-14 19:20:31,392 - WARNING - Ligne 18 : Colonne 'Id Client Qonto (Rollup)' trouvée mais contenu vide.
+2026-04-14 19:20:31,392 - ERROR - Erreur ligne 19 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,392 - ERROR - Erreur ligne 20 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,392 - WARNING - Ligne 21 : Colonne 'Id Client Qonto (Rollup)' trouvée mais contenu vide.
+2026-04-14 19:20:31,393 - ERROR - Erreur ligne 22 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,393 - ERROR - Erreur ligne 23 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,393 - ERROR - Erreur ligne 24 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,393 - ERROR - Erreur ligne 25 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,394 - ERROR - Erreur ligne 26 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,394 - ERROR - Erreur ligne 27 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,394 - ERROR - Erreur ligne 28 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,394 - ERROR - Erreur ligne 29 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,395 - ERROR - Erreur ligne 30 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,395 - ERROR - Erreur ligne 31 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,395 - ERROR - Erreur ligne 32 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,395 - ERROR - Erreur ligne 33 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,395 - ERROR - Erreur ligne 34 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,396 - ERROR - Erreur ligne 35 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,396 - ERROR - Erreur ligne 36 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,396 - ERROR - Erreur ligne 37 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,397 - ERROR - Erreur ligne 38 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,397 - WARNING - Ligne 39 : Colonne 'Id Client Qonto (Rollup)' trouvée mais contenu vide.
+2026-04-14 19:20:31,397 - WARNING - Ligne 40 : Colonne 'Id Client Qonto (Rollup)' trouvée mais contenu vide.
+2026-04-14 19:20:31,397 - WARNING - Ligne 41 : Colonne 'Id Client Qonto (Rollup)' trouvée mais contenu vide.
+2026-04-14 19:20:31,397 - WARNING - Ligne 42 : Colonne 'Id Client Qonto (Rollup)' trouvée mais contenu vide.
+2026-04-14 19:20:31,397 - WARNING - Ligne 43 : Colonne 'Id Client Qonto (Rollup)' trouvée mais contenu vide.
+2026-04-14 19:20:31,398 - ERROR - Erreur ligne 44 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,398 - WARNING - Ligne 45 : Colonne 'Id Client Qonto (Rollup)' trouvée mais contenu vide.
+2026-04-14 19:20:31,398 - ERROR - Erreur ligne 46 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,398 - ERROR - Erreur ligne 47 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,399 - WARNING - Ligne 48 : Colonne 'Id Client Qonto (Rollup)' trouvée mais contenu vide.
+2026-04-14 19:20:31,399 - WARNING - Ligne 49 : Colonne 'Id Client Qonto (Rollup)' trouvée mais contenu vide.
+2026-04-14 19:20:31,399 - ERROR - Erreur ligne 50 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,399 - ERROR - Erreur ligne 51 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,400 - ERROR - Erreur ligne 52 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,400 - ERROR - Erreur ligne 53 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,400 - WARNING - Ligne 54 : Colonne 'Id Client Qonto (Rollup)' trouvée mais contenu vide.
+2026-04-14 19:20:31,400 - ERROR - Erreur ligne 55 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,401 - WARNING - Ligne 56 : Colonne 'Id Client Qonto (Rollup)' trouvée mais contenu vide.
+2026-04-14 19:20:31,401 - ERROR - Erreur ligne 57 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,401 - ERROR - Erreur ligne 58 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,401 - ERROR - Erreur ligne 59 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,402 - ERROR - Erreur ligne 60 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,402 - ERROR - Erreur ligne 61 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,402 - ERROR - Erreur ligne 62 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,402 - ERROR - Erreur ligne 63 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,402 - ERROR - Erreur ligne 64 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,402 - WARNING - Ligne 65 : Colonne 'Id Client Qonto (Rollup)' trouvée mais contenu vide.
+2026-04-14 19:20:31,403 - ERROR - Erreur ligne 66 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,403 - WARNING - Ligne 67 : Colonne 'Id Client Qonto (Rollup)' trouvée mais contenu vide.
+2026-04-14 19:20:31,403 - ERROR - Erreur ligne 68 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,403 - WARNING - Ligne 69 : Colonne 'Id Client Qonto (Rollup)' trouvée mais contenu vide.
+2026-04-14 19:20:31,403 - ERROR - Erreur ligne 70 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,403 - ERROR - Erreur ligne 71 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,404 - ERROR - Erreur ligne 72 : float() argument must be a string or a real number, not 'NoneType'
+2026-04-14 19:20:31,404 - WARNING - Ligne 73 : Colonne 'Id Client Qonto (Rollup)' trouvée mais contenu vide.
+2026-04-14 19:20:31,404 - INFO - Envoi Qonto : TEST (03/2026) -> 666.00€
+2026-04-14 19:20:32,003 - INFO - ✅ Brouillon Qonto créé pour TEST.
+2026-04-14 19:20:32,004 - INFO - Mise à jour Notion en cours...
+2026-04-14 19:20:33,122 - INFO -    ∟ Notion mis à jour : Page 34204667-171a-804d-bc38-d8e7699e6612 -> Facturé
