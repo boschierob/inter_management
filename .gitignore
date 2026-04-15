@@ -1,8 +1,14 @@
 # On ignore tout le contenu du dossier
 /*
+*
 
 # On autorise exceptionnellement ces fichiers
 !app.py
 !record_inter.py
 !.gitignore
 !requirements.txt   
+
+# Sécurité explicite
+.env
+venv/
+__pycache__/
