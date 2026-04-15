@@ -4,10 +4,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-TOKEN = os.getenv("NOTION_TOKEN")
-DB_INTERVENTIONS = os.getenv("NOTION_INTERVENTIONS_DB_ID")
-DB_PRESTATIONS = os.getenv("NOTION_PRESTATIONS_DB_ID")
-DB_CLIENTS = os.getenv("NOTION_CLIENTS_DB_ID")
+TOKEN = st.secrets.get("NOTION_TOKEN") or os.getenv("NOTION_TOKEN")
+DB_INTERVENTIONS = st.secrets.get("NOTION_INTERVENTIONS_DB_ID") or os.getenv("NOTION_INTERVENTIONS_DB_ID")
+DB_PRESTATIONS =st.secrets.get("NOTION_PRESTATIONS_DB_ID") or os.getenv("NOTION_PRESTATIONS_DB_ID")
+DB_CLIENTS = st.secrets.get("NOTION_CLIENTS_DB_ID") or os.getenv("NOTION_CLIENTS_DB_ID")
 
 HEADERS = {
     "Authorization": f"Bearer {TOKEN}",
