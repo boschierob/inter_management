@@ -1,9 +1,19 @@
 import streamlit as st
+import os
 import record_inter as api
 from datetime import datetime
 
-NOTION_TOKEN = st.secrets.get("NOTION_TOKEN") or os.getenv("NOTION_TOKEN")
-DB_CLIENTS = st.secrets.get("NOTION_CLIENTS_DB_ID") or os.getenv("NOTION_CLIENTS_DB_ID")
+try:
+    TOKEN = st.secrets["NOTION_TOKEN"]
+    DB_CLIENTS = st.secrets["NOTION_CLIENTS_DB_ID"]
+    DB_PRESTATIONS = st.secrets["NOTION_PRESTATIONS_DB_ID"]
+    DB_INTERVENTIONS = st.secrets["NOTION_INTERVENTIONS_DB_ID"]
+except:
+    # Si st.secrets échoue (en local), on prend le .env
+    TOKEN = os.getenv("NOTION_TOKEN")
+    DB_CLIENTS = os.getenv("NOTION_CLIENTS_DB_ID")
+    DB_PRESTATIONS = os.getenv("NOTION_PRESTATIONS_DB_ID")
+    DB_INTERVENTIONS = os.getenv("NOTION_INTERVENTIONS_DB_ID")
 
 # Configurer la page pour le responsive
 st.set_page_config(page_title="Saisie Multi-Clients", layout="centered")
