@@ -215,7 +215,7 @@ if st.session_state.multi_interventions:
             st.success("Toutes les interventions ont été enregistrées !")
             st.session_state.multi_interventions = []
             st.balloons()
-            st.rerun()
+           # st.rerun()
         else:
             st.warning(f"Attention : seulement {success_count}/{total} enregistrements réussis. Vérifiez votre terminal.")
 else:
