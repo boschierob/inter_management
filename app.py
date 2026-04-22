@@ -160,28 +160,24 @@ if st.session_state.multi_interventions:
         for idx, inter in enumerate(st.session_state.multi_interventions):
             with st.spinner(f"Envoi intervention {idx+1}/{total}..."):
                 
-                # 1. Traitement des Photos
                 list_files_notion = []
                 for p in inter.get('photos', []):
                     url = api.upload_image_to_cloud(p)
                     if url:
                         list_files_notion.append({"name": p.name, "external": {"url": url}})
 
-                # 2. Traitement Signature Client
                 url_sig_client = None
                 if inter.get('canvas_client_data') is not None:
                     img_c = api.convert_canvas_to_image(inter['canvas_client_data'])
                     if img_c:
                         url_sig_client = api.upload_image_to_cloud(img_c)
 
-                # 3. Traitement Signature Intervenant
                 url_sig_inter = None
                 if inter.get('canvas_inter_data') is not None:
                     img_i = api.convert_canvas_to_image(inter['canvas_inter_data'])
                     if img_i:
                         url_sig_inter = api.upload_image_to_cloud(img_i)
 
-                # 4. Construction Dynamique des Propriétés (Sécurité Notion)
                 props = {
                     "Date Intervention": {"date": {"start": inter['date']}},
                     "Client": {"relation": [{"id": inter['client_id']}]},
@@ -190,13 +186,10 @@ if st.session_state.multi_interventions:
                     "Intervenants": {"relation": [{"id": inter['intervenant_id']}]}
                 }
 
-                # On ajoute les colonnes médias SEULEMENT si elles contiennent des données
                 if list_files_notion:
                     props["Preuves"] = {"files": list_files_notion}
-                
                 if url_sig_client:
                     props["Signature Client"] = {"files": [{"name": "sig_client.png", "external": {"url": url_sig_client}}]}
-                
                 if url_sig_inter:
                     props["Signature Intervenant"] = {"files": [{"name": "sig_inter.png", "external": {"url": url_sig_inter}}]}
 
@@ -206,23 +199,21 @@ if st.session_state.multi_interventions:
                 }
                 
                 res = api.create_intervention_page(payload)
-                if res.status_code == 200 or res.status_code == 201:
+                if res.status_code in [200, 201]:
                     success_count += 1
                 
                 progress_bar.progress((idx + 1) / total)
         
-        if success_count == total:
-            st.success("Toutes les interventions ont été enregistrées !")
-            st.session_state.multi_interventions = []
+        # --- BLOC DE SUCCÈS ---
+        if success_count == total and total > 0:
+            st.session_state.multi_interventions = [] # Vide la mémoire
+            st.success(f"✅ {success_count} intervention(s) enregistrée(s) avec succès !")
             st.balloons()
-            # On vide la liste dans le state
-            st.session_state.multi_interventions = [] 
-    
-             # On propose de recharger pour une nouvelle saisie proprement
             if st.button("Faire une nouvelle saisie"):
-                 st.rerun()
-            else:
-                st.warning(f"Attention : seulement {success_count}/{total} enregistrements réussis. Vérifiez votre terminal.")
+                st.rerun()
+                
+        elif success_count > 0:
+            st.warning(f"Attention : seulement {success_count}/{total} enregistrements réussis.")
 else:
     if not client_name:
         st.info("Sélectionnez un client pour commencer.")
