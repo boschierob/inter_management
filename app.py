@@ -215,9 +215,14 @@ if st.session_state.multi_interventions:
             st.success("Toutes les interventions ont été enregistrées !")
             st.session_state.multi_interventions = []
             st.balloons()
-           # st.rerun()
-        else:
-            st.warning(f"Attention : seulement {success_count}/{total} enregistrements réussis. Vérifiez votre terminal.")
+            # On vide la liste dans le state
+            st.session_state.multi_interventions = [] 
+    
+             # On propose de recharger pour une nouvelle saisie proprement
+            if st.button("Faire une nouvelle saisie"):
+                 st.rerun()
+            else:
+                st.warning(f"Attention : seulement {success_count}/{total} enregistrements réussis. Vérifiez votre terminal.")
 else:
     if not client_name:
         st.info("Sélectionnez un client pour commencer.")
