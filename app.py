@@ -3,8 +3,8 @@ import os
 import record_inter as api
 from datetime import datetime
 
-# Configurer la page pour le responsive
-st.set_page_config(page_title="Saisie Multi-Clients", layout="centered")
+# 1. Configurer la page
+st.set_page_config(page_title="Saisie Interventions", layout="centered")
 
 # --- STYLE CSS ---
 st.markdown("""
@@ -26,26 +26,61 @@ st.markdown("""
         font-size: 0.8em;
         font-weight: bold;
     }
+    .user-info {
+        font-size: 0.9em;
+        color: #666;
+        text-align: right;
+        margin-bottom: 20px;
+    }
     </style>
     """, unsafe_allow_html=True)
-
-st.title("🛠 Saisie Multi-Clients")
 
 # --- INITIALISATION DE L'ÉTAT ---
 if 'multi_interventions' not in st.session_state:
     st.session_state.multi_interventions = []
+if 'user' not in st.session_state:
+    st.session_state.user = None
 
-# --- ÉTAPE 1 : SÉLECTION DU CLIENT ---
-# On appelle directement l'API qui gère maintenant ses propres secrets
-all_clients = api.get_all_clients()
+# --- ÉCRAN DE CONNEXION ---
+if st.session_state.user is None:
+    st.title("🔐 Connexion")
+    with st.form("login_form"):
+        email = st.text_input("Email Professionnel")
+        # Utilisation de type="password" et max_chars=4 pour le PIN
+        pin = st.text_input("Code PIN (4 chiffres)", type="password", max_chars=4)
+        submit_login = st.form_submit_button("Se connecter")
+        
+        if submit_login:
+            with st.spinner("Vérification..."):
+                user_data = api.login_user(email, pin)
+                if user_data:
+                    st.session_state.user = user_data
+                    st.success(f"Bienvenue {user_data['name']} !")
+                    st.rerun()
+                else:
+                    st.error("Email ou PIN incorrect.")
+    st.stop() # Arrête l'exécution ici si pas connecté
+
+# --- INTERFACE PRINCIPALE (Utilisateur connecté) ---
+user = st.session_state.user
+
+# Barre d'info utilisateur
+st.markdown(f"""<div class="user-info">👤 {user['name']} ({", ".join(user['roles'])}) | 
+            <a href="javascript:window.location.reload();" style="color:red; text-decoration:none;">Déconnexion</a></div>""", 
+            unsafe_allow_html=True)
+
+st.title("🛠 Saisie Multi-Clients")
+
+# --- ÉTAPE 1 : SÉLECTION DU CLIENT (Filtrée par rôle) ---
+# On passe user_data à l'API pour filtrer selon les droits
+all_clients = api.get_all_clients(user_data=user)
 client_name = st.selectbox("🎯 Choisir le Client", options=[""] + list(all_clients.keys()))
 
 if client_name:
     client_id = all_clients[client_name]
     
-    # Charger les prestations du client sélectionné avec cache session
     if 'cached_prestas' not in st.session_state or st.session_state.get('last_selected_client') != client_name:
-        with st.spinner(f"Chargement des prestations de {client_name}..."):
+        with st.spinner(f"Chargement des prestations..."):
             st.session_state.cached_prestas = api.get_prestations_for_client(client_id)
             st.session_state.last_selected_client = client_name
 
@@ -69,14 +104,15 @@ if client_name:
                     "nom_presta": presta_choice,
                     "id_presta": st.session_state.cached_prestas[presta_choice],
                     "date": str(date_choice),
-                    "commentaire": comment
+                    "commentaire": comment,
+                    "intervenant_id": user['id'] # On stocke l'ID de celui qui saisit
                 })
-                st.toast(f"Ajouté : {client_name} - {presta_choice}")
+                st.toast(f"Ajouté : {presta_choice}")
 
-# --- ÉTAPE 3 : RÉCAPITULATIF GLOBAL ---
+# --- ÉTAPE 3 : RÉCAPITULATIF ET ENVOI ---
 if st.session_state.multi_interventions:
     st.divider()
-    st.subheader(f"📝 Panier d'interventions ({len(st.session_state.multi_interventions)})")
+    st.subheader(f"📝 Panier ({len(st.session_state.multi_interventions)})")
     
     for i, item in enumerate(st.session_state.multi_interventions):
         with st.container():
@@ -91,40 +127,35 @@ if st.session_state.multi_interventions:
                 st.session_state.multi_interventions.pop(i)
                 st.rerun()
 
-    st.divider()
-    
     if st.button("🚀 ENREGISTRER TOUT DANS NOTION", type="primary"):
-        # On récupère la config Notion une seule fois pour l'ID de la DB interventions
         config = api.get_notion_config()
-        
         success_count = 0
         total = len(st.session_state.multi_interventions)
         progress_bar = st.progress(0)
         
         for idx, inter in enumerate(st.session_state.multi_interventions):
             payload = {
-                "parent": {"database_id": config['db_interventions']}, # CORRECTION ICI
+                "parent": {"database_id": config['db_interventions']},
                 "properties": {
                     "Date Intervention": {"date": {"start": inter['date']}},
                     "Client": {"relation": [{"id": inter['client_id']}]},
                     "Lien Prestation": {"relation": [{"id": inter['id_presta']}]},
                     "Prestation Titre": {"rich_text": [{"text": {"content": inter['nom_presta']}}]},
-                    "Commentaire": {"rich_text": [{"text": {"content": inter['commentaire']}}]}
+                    "Commentaire": {"rich_text": [{"text": {"content": inter['commentaire']}}]},
+                    # AJOUT : On lie l'intervention à l'intervenant pour la paie
+                    "Intervenant ayant réalisé l'action": {"relation": [{"id": inter['intervenant_id']}]}
                 }
             }
             res = api.create_intervention_page(payload)
             if res.status_code == 200:
                 success_count += 1
-            
             progress_bar.progress((idx + 1) / total)
         
         if success_count == total:
-            st.success(f"Terminé ! {success_count} interventions créées dans Notion.")
-            st.session_state.multi_interventions = [] # Vide le panier
+            st.success("Toutes les interventions ont été enregistrées !")
+            st.session_state.multi_interventions = []
             st.balloons()
-            st.rerun() # Rafraîchit la page pour nettoyer l'interface
-        else:
-            st.warning(f"Attention : seulement {success_count}/{total} enregistrements réussis.")
+            st.rerun()
 else:
     if not client_name:
-        st.info("Sélectionnez un premier client pour commencer à remplir votre panier d'interventions.")
+        st.info("Sélectionnez un client pour commencer.")

@@ -3,19 +3,18 @@ import os
 import requests
 
 def get_notion_config():
-    """Récupère la configuration et génère les headers dynamiquement."""
     try:
-        # Tentative via Streamlit Secrets
         token = st.secrets["NOTION_TOKEN"]
         db_clients = st.secrets["NOTION_CLIENTS_DB_ID"]
         db_prestations = st.secrets["NOTION_PRESTATIONS_DB_ID"]
         db_interventions = st.secrets["NOTION_INTERVENTIONS_DB_ID"]
+        db_intervenants = st.secrets["NOTION_INTERVENANTS_DB_ID"] # <--- AJOUT
     except Exception:
-        # Repli sur les variables d'environnement (Local)
         token = os.getenv("NOTION_TOKEN")
         db_clients = os.getenv("NOTION_CLIENTS_DB_ID")
         db_prestations = os.getenv("NOTION_PRESTATIONS_DB_ID")
         db_interventions = os.getenv("NOTION_INTERVENTIONS_DB_ID")
+        db_intervenants = os.getenv("NOTION_INTERVENANTS_DB_ID") # <--- AJOUT
 
     headers = {
         "Authorization": f"Bearer {token}",
@@ -27,9 +26,58 @@ def get_notion_config():
         "headers": headers,
         "db_clients": db_clients,
         "db_prestations": db_prestations,
-        "db_interventions": db_interventions
+        "db_interventions": db_interventions,
+        "db_intervenants": db_intervenants # <--- AJOUT
     }
+def login_user(email, pin):
+    config = get_notion_config()
+    
+    # On nettoie l'entrée (espaces invisibles avant/après)
+    email = str(email).strip()
+    pin = str(pin).strip()
+    
+    # --- LOGS TERMINAL ---
+    print("\n--- DEBUG LOGIN ---")
+    print(f"Tentative de connexion -> Email : '{email}' | PIN : '{pin}'")
+    
+    # Sécurité supplémentaire : Si le PIN n'est pas composé de 4 chiffres
+    if not (len(pin) == 4 and pin.isdigit()):
+        print("❌ Rejet local : Le PIN ne contient pas exactement 4 chiffres.")
+        return None
 
+    filter_payload = {
+        "filter": {
+            "and": [
+                {"property": "Email", "email": {"equals": email}},
+                # Comme c'est du Texte, on utilise rich_text
+                {"property": "Code PIN", "rich_text": {"equals": pin}}
+            ]
+        }
+    }
+    
+    # print(f"Payload Notion : {filter_payload}") # Décommente si tu veux voir la requête brute
+    
+    results = query_notion(config['db_intervenants'], filter_payload)
+    
+    print(f"Réponse Notion -> Nombre de résultats trouvés : {len(results)}")
+    
+    if results:
+        user_page = results[0]
+        # Extraction des rôles
+        roles = [r['name'] for r in user_page['properties']['Rôles']['multi_select']]
+        name = get_title(user_page, 'Name')
+        
+        print(f"✅ Succès : Utilisateur {name} identifié avec les rôles {roles}")
+        
+        return {
+            "id": user_page['id'],
+            "name": name,
+            "roles": roles
+        }
+        
+    print("❌ Échec : Aucun intervenant trouvé avec cet Email ET ce PIN.")
+    return None
+    
 def query_notion(database_id, filter_data=None):
     config = get_notion_config() # Récupération dynamique
     url = f"https://api.notion.com/v1/databases/{database_id}/query"
@@ -46,10 +94,23 @@ def get_title(page, property_name):
     return "Sans titre"
 
 # --- FONCTIONS POUR L'INTERFACE ---
-
-def get_all_clients():
-    config = get_notion_config() # Récupération dynamique
-    clients_data = query_notion(config['db_clients'])
+def get_all_clients(user_data=None):
+    config = get_notion_config()
+    
+    # Si pas de user_data ou si Admin/Gérant -> On voit TOUT
+    if not user_data or any(role in ['Admin', 'Gérant'] for role in user_data['roles']):
+        clients_data = query_notion(config['db_clients'])
+    else:
+        # Pour Employé/Sous-traitant/Manager -> Filtre sur la relation bidirectionnelle
+        # Notion cherche si l'ID de l'utilisateur est présent dans la colonne 'Intervenant(s) Responsable(s)'
+        filter_payload = {
+            "filter": {
+                "property": "Intervenant(s) Responsable(s)",
+                "relation": {"contains": user_data['id']}
+            }
+        }
+        clients_data = query_notion(config['db_clients'], filter_payload)
+    
     return {get_title(c, 'Name'): c['id'] for c in clients_data}
 
 def get_prestations_for_client(id_client):
