@@ -12,3 +12,5 @@
 .env
 venv/
 __pycache__/
+# Configuration locale de Streamlit (contient les secrets)
+.streamlit/

@@ -3,21 +3,10 @@ import os
 import record_inter as api
 from datetime import datetime
 
-try:
-    TOKEN = st.secrets["NOTION_TOKEN"]
-    DB_CLIENTS = st.secrets["NOTION_CLIENTS_DB_ID"]
-    DB_PRESTATIONS = st.secrets["NOTION_PRESTATIONS_DB_ID"]
-    DB_INTERVENTIONS = st.secrets["NOTION_INTERVENTIONS_DB_ID"]
-except:
-    # Si st.secrets échoue (en local), on prend le .env
-    TOKEN = os.getenv("NOTION_TOKEN")
-    DB_CLIENTS = os.getenv("NOTION_CLIENTS_DB_ID")
-    DB_PRESTATIONS = os.getenv("NOTION_PRESTATIONS_DB_ID")
-    DB_INTERVENTIONS = os.getenv("NOTION_INTERVENTIONS_DB_ID")
-
 # Configurer la page pour le responsive
 st.set_page_config(page_title="Saisie Multi-Clients", layout="centered")
 
+# --- STYLE CSS ---
 st.markdown("""
     <style>
     .stButton>button { width: 100%; border-radius: 8px; height: 3em; margin-top: 10px; }
@@ -42,19 +31,19 @@ st.markdown("""
 
 st.title("🛠 Saisie Multi-Clients")
 
-# --- INITIALISATION DE L'ÉTAT (Persistant même si on change de client) ---
+# --- INITIALISATION DE L'ÉTAT ---
 if 'multi_interventions' not in st.session_state:
     st.session_state.multi_interventions = []
 
 # --- ÉTAPE 1 : SÉLECTION DU CLIENT ---
+# On appelle directement l'API qui gère maintenant ses propres secrets
 all_clients = api.get_all_clients()
 client_name = st.selectbox("🎯 Choisir le Client", options=[""] + list(all_clients.keys()))
 
 if client_name:
     client_id = all_clients[client_name]
     
-    # Charger les prestations du client sélectionné
-    # On utilise un cache simple pour ne pas requêter Notion à chaque clic
+    # Charger les prestations du client sélectionné avec cache session
     if 'cached_prestas' not in st.session_state or st.session_state.get('last_selected_client') != client_name:
         with st.spinner(f"Chargement des prestations de {client_name}..."):
             st.session_state.cached_prestas = api.get_prestations_for_client(client_id)
@@ -65,15 +54,15 @@ if client_name:
         with st.form("form_inter", clear_on_submit=True):
             col1, col2 = st.columns([2, 1])
             with col1:
-                presta_choice = st.selectbox("Prestation", options=list(st.session_state.cached_prestas.keys()))
+                presta_options = list(st.session_state.cached_prestas.keys())
+                presta_choice = st.selectbox("Prestation", options=presta_options)
             with col2:
                 date_choice = st.date_input("Date", value=datetime.now())
             
             comment = st.text_area("Commentaire (optionnel)")
             
             submitted = st.form_submit_button("Ajouter au panier")
-            if submitted:
-                # ICI : On enregistre l'ID du client AVEC l'intervention
+            if submitted and presta_choice:
                 st.session_state.multi_interventions.append({
                     "client_name": client_name,
                     "client_id": client_id,
@@ -84,7 +73,7 @@ if client_name:
                 })
                 st.toast(f"Ajouté : {client_name} - {presta_choice}")
 
-# --- ÉTAPE 3 : RÉCAPITULATIF GLOBAL (Indépendant du client sélectionné) ---
+# --- ÉTAPE 3 : RÉCAPITULATIF GLOBAL ---
 if st.session_state.multi_interventions:
     st.divider()
     st.subheader(f"📝 Panier d'interventions ({len(st.session_state.multi_interventions)})")
@@ -105,16 +94,19 @@ if st.session_state.multi_interventions:
     st.divider()
     
     if st.button("🚀 ENREGISTRER TOUT DANS NOTION", type="primary"):
+        # On récupère la config Notion une seule fois pour l'ID de la DB interventions
+        config = api.get_notion_config()
+        
         success_count = 0
         total = len(st.session_state.multi_interventions)
         progress_bar = st.progress(0)
         
         for idx, inter in enumerate(st.session_state.multi_interventions):
             payload = {
-                "parent": {"database_id": api.DB_INTERVENTIONS},
+                "parent": {"database_id": config['db_interventions']}, # CORRECTION ICI
                 "properties": {
                     "Date Intervention": {"date": {"start": inter['date']}},
-                    "Client": {"relation": [{"id": inter['client_id']}]}, # Utilise l'ID spécifique à la ligne
+                    "Client": {"relation": [{"id": inter['client_id']}]},
                     "Lien Prestation": {"relation": [{"id": inter['id_presta']}]},
                     "Prestation Titre": {"rich_text": [{"text": {"content": inter['nom_presta']}}]},
                     "Commentaire": {"rich_text": [{"text": {"content": inter['commentaire']}}]}
@@ -128,8 +120,9 @@ if st.session_state.multi_interventions:
         
         if success_count == total:
             st.success(f"Terminé ! {success_count} interventions créées dans Notion.")
-            st.session_state.multi_interventions = [] # On vide le panier après succès total
+            st.session_state.multi_interventions = [] # Vide le panier
             st.balloons()
+            st.rerun() # Rafraîchit la page pour nettoyer l'interface
         else:
             st.warning(f"Attention : seulement {success_count}/{total} enregistrements réussis.")
 else:
