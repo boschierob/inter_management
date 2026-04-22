@@ -153,6 +153,40 @@ def get_prestations_for_client(id_client):
     prestas_data = query_notion(config['db_prestations'], filter_payload)
     return {get_title(p, 'Prestation'): p['id'] for p in prestas_data}
 
+def get_interventions_history(user_data):
+    # 1. On récupère le dictionnaire de config
+    config = get_notion_config()
+    
+    # 2. On extrait les headers et l'ID de la base de données
+    headers = config["headers"]
+    db_id = config["db_interventions"]
+    
+    # 3. Vérification du rôle (Admin vs Intervenant)
+    is_admin = any(role in ["Gérant", "Manager"] for role in user_data['roles'])
+    
+    url = f"https://api.notion.com/v1/databases/{db_id}/query"
+    
+    payload = {
+        "sorts": [{"property": "Date Intervention", "direction": "descending"}]
+    }
+    
+    # Si l'utilisateur n'est pas admin, on filtre par son ID
+    if not is_admin:
+        payload["filter"] = {
+            "property": "Intervenants",
+            "relation": {"contains": user_data['id']}
+        }
+    
+    # 4. Appel API avec les headers extraits de la config
+    res = requests.post(url, headers=headers, json=payload)
+    
+    if res.status_code == 200:
+        return res.json().get('results', [])
+    else:
+        # En cas d'erreur, on peut logger pour débugger
+        print(f"Erreur Notion: {res.status_code} - {res.text}")
+        return []
+
 # --- ENREGISTREMENT FINAL ---
 
 def create_intervention_page(payload):
