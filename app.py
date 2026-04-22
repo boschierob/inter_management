@@ -2,6 +2,12 @@ import streamlit as st
 import os
 import record_inter as api
 from datetime import datetime
+try:
+    from streamlit_canvas import st_canvas
+except ImportError:
+    from streamlit_drawable_canvas import st_canvas
+from PIL import Image
+import io
 
 # 1. Configurer la page
 st.set_page_config(page_title="Saisie Interventions", layout="centered")
@@ -46,7 +52,6 @@ if st.session_state.user is None:
     st.title("🔐 Connexion")
     with st.form("login_form"):
         email = st.text_input("Email Professionnel")
-        # Utilisation de type="password" et max_chars=4 pour le PIN
         pin = st.text_input("Code PIN (4 chiffres)", type="password", max_chars=4)
         submit_login = st.form_submit_button("Se connecter")
         
@@ -59,20 +64,15 @@ if st.session_state.user is None:
                     st.rerun()
                 else:
                     st.error("Email ou PIN incorrect.")
-    st.stop() # Arrête l'exécution ici si pas connecté
+    st.stop() 
 
-# --- INTERFACE PRINCIPALE (Utilisateur connecté) ---
+# --- INTERFACE PRINCIPALE ---
 user = st.session_state.user
 
-# Barre d'info utilisateur
-st.markdown(f"""<div class="user-info">👤 {user['name']} ({", ".join(user['roles'])}) | 
-            <a href="javascript:window.location.reload();" style="color:red; text-decoration:none;">Déconnexion</a></div>""", 
-            unsafe_allow_html=True)
-
+st.markdown(f"""<div class="user-info">👤 {user['name']} ({", ".join(user['roles'])})</div>""", unsafe_allow_html=True)
 st.title("🛠 Saisie Multi-Clients")
 
-# --- ÉTAPE 1 : SÉLECTION DU CLIENT (Filtrée par rôle) ---
-# On passe user_data à l'API pour filtrer selon les droits
+# --- ÉTAPE 1 : SÉLECTION DU CLIENT ---
 all_clients = api.get_all_clients(user_data=user)
 client_name = st.selectbox("🎯 Choisir le Client", options=[""] + list(all_clients.keys()))
 
@@ -95,8 +95,29 @@ if client_name:
                 date_choice = st.date_input("Date", value=datetime.now())
             
             comment = st.text_area("Commentaire (optionnel)")
+
+            st.write("📸 **Preuves photos**")
+            photos = st.file_uploader("Preuves", type=['png', 'jpg', 'jpeg'], accept_multiple_files=True)
+
+            st.write("✍️ **Signatures**")
+            col_sig_a, col_sig_b = st.columns(2)
+            
+            with col_sig_a:
+                st.caption("Signature Client")
+                canvas_client = st_canvas(
+                    stroke_width=2, stroke_color="#000", background_color="#F0F2F6",
+                    height=100, key="sig_client", display_toolbar=False, update_streamlit=True
+                )
+            
+            with col_sig_b:
+                st.caption("Signature Intervenant")
+                canvas_inter = st_canvas(
+                    stroke_width=2, stroke_color="#000", background_color="#F0F2F6",
+                    height=100, key="sig_inter", display_toolbar=False, update_streamlit=True
+                )
             
             submitted = st.form_submit_button("Ajouter au panier")
+            
             if submitted and presta_choice:
                 st.session_state.multi_interventions.append({
                     "client_name": client_name,
@@ -105,7 +126,10 @@ if client_name:
                     "id_presta": st.session_state.cached_prestas[presta_choice],
                     "date": str(date_choice),
                     "commentaire": comment,
-                    "intervenant_id": user['id'] # On stocke l'ID de celui qui saisit
+                    "intervenant_id": user['id'],
+                    "photos": photos if photos else [],
+                    "canvas_client_data": canvas_client.image_data,
+                    "canvas_inter_data": canvas_inter.image_data
                 })
                 st.toast(f"Ajouté : {presta_choice}")
 
@@ -134,28 +158,66 @@ if st.session_state.multi_interventions:
         progress_bar = st.progress(0)
         
         for idx, inter in enumerate(st.session_state.multi_interventions):
-            payload = {
-                "parent": {"database_id": config['db_interventions']},
-                "properties": {
+            with st.spinner(f"Envoi intervention {idx+1}/{total}..."):
+                
+                # 1. Traitement des Photos
+                list_files_notion = []
+                for p in inter.get('photos', []):
+                    url = api.upload_image_to_cloud(p)
+                    if url:
+                        list_files_notion.append({"name": p.name, "external": {"url": url}})
+
+                # 2. Traitement Signature Client
+                url_sig_client = None
+                if inter.get('canvas_client_data') is not None:
+                    img_c = api.convert_canvas_to_image(inter['canvas_client_data'])
+                    if img_c:
+                        url_sig_client = api.upload_image_to_cloud(img_c)
+
+                # 3. Traitement Signature Intervenant
+                url_sig_inter = None
+                if inter.get('canvas_inter_data') is not None:
+                    img_i = api.convert_canvas_to_image(inter['canvas_inter_data'])
+                    if img_i:
+                        url_sig_inter = api.upload_image_to_cloud(img_i)
+
+                # 4. Construction Dynamique des Propriétés (Sécurité Notion)
+                props = {
                     "Date Intervention": {"date": {"start": inter['date']}},
                     "Client": {"relation": [{"id": inter['client_id']}]},
                     "Lien Prestation": {"relation": [{"id": inter['id_presta']}]},
-                    "Prestation Titre": {"rich_text": [{"text": {"content": inter['nom_presta']}}]},
                     "Commentaire": {"rich_text": [{"text": {"content": inter['commentaire']}}]},
-                    # AJOUT : On lie l'intervention à l'intervenant pour la paie
-                    "Intervenant ayant réalisé l'action": {"relation": [{"id": inter['intervenant_id']}]}
+                    "Intervenants": {"relation": [{"id": inter['intervenant_id']}]}
                 }
-            }
-            res = api.create_intervention_page(payload)
-            if res.status_code == 200:
-                success_count += 1
-            progress_bar.progress((idx + 1) / total)
+
+                # On ajoute les colonnes médias SEULEMENT si elles contiennent des données
+                if list_files_notion:
+                    props["Preuves"] = {"files": list_files_notion}
+                
+                if url_sig_client:
+                    props["Signature Client"] = {"files": [{"name": "sig_client.png", "external": {"url": url_sig_client}}]}
+                
+                if url_sig_inter:
+                    props["Signature Intervenant"] = {"files": [{"name": "sig_inter.png", "external": {"url": url_sig_inter}}]}
+
+                payload = {
+                    "parent": {"database_id": config['db_interventions']},
+                    "properties": props
+                }
+                
+                res = api.create_intervention_page(payload)
+                if res.status_code == 200 or res.status_code == 201:
+                    success_count += 1
+                
+                progress_bar.progress((idx + 1) / total)
         
         if success_count == total:
             st.success("Toutes les interventions ont été enregistrées !")
             st.session_state.multi_interventions = []
             st.balloons()
             st.rerun()
+        else:
+            st.warning(f"Attention : seulement {success_count}/{total} enregistrements réussis. Vérifiez votre terminal.")
 else:
     if not client_name:
         st.info("Sélectionnez un client pour commencer.")
