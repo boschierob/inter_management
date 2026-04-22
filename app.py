@@ -46,6 +46,8 @@ if 'multi_interventions' not in st.session_state:
     st.session_state.multi_interventions = []
 if 'user' not in st.session_state:
     st.session_state.user = None
+if 'canvas_key' not in st.session_state:
+    st.session_state.canvas_key = 0
 
 # --- ÉCRAN DE CONNEXION ---
 if st.session_state.user is None:
@@ -104,16 +106,19 @@ if client_name:
             
             with col_sig_a:
                 st.caption("Signature Client")
+                # Utilisation de canvas_key pour pouvoir réinitialiser le dessin
                 canvas_client = st_canvas(
                     stroke_width=2, stroke_color="#000", background_color="#F0F2F6",
-                    height=100, key="sig_client", display_toolbar=False, update_streamlit=True
+                    height=100, key=f"sig_client_{st.session_state.canvas_key}", 
+                    display_toolbar=False, update_streamlit=True
                 )
             
             with col_sig_b:
                 st.caption("Signature Intervenant")
                 canvas_inter = st_canvas(
                     stroke_width=2, stroke_color="#000", background_color="#F0F2F6",
-                    height=100, key="sig_inter", display_toolbar=False, update_streamlit=True
+                    height=100, key=f"sig_inter_{st.session_state.canvas_key}", 
+                    display_toolbar=False, update_streamlit=True
                 )
             
             submitted = st.form_submit_button("Ajouter au panier")
@@ -131,7 +136,10 @@ if client_name:
                     "canvas_client_data": canvas_client.image_data,
                     "canvas_inter_data": canvas_inter.image_data
                 })
+                # On incrémente la clé pour vider les signatures au prochain rendu
+                st.session_state.canvas_key += 1
                 st.toast(f"Ajouté : {presta_choice}")
+                st.rerun() # Nécessaire pour vider le formulaire et reset les signatures
 
 # --- ÉTAPE 3 : RÉCAPITULATIF ET ENVOI ---
 if st.session_state.multi_interventions:
@@ -209,7 +217,9 @@ if st.session_state.multi_interventions:
             st.session_state.multi_interventions = [] # Vide la mémoire
             st.success(f"✅ {success_count} intervention(s) enregistrée(s) avec succès !")
             st.balloons()
+            # On réinitialise aussi les signatures pour la prochaine saisie
             if st.button("Faire une nouvelle saisie"):
+                st.session_state.canvas_key += 1
                 st.rerun()
                 
         elif success_count > 0:
