@@ -140,21 +140,67 @@ if st.session_state.page == "historique":
         if not history:
             st.info("Aucun historique disponible.")
         else:
+            # DÉBUT DE LA BOUCLE
             for res in history:
-                p = res['properties']
-                date_val = p['Date Intervention']['date']['start']
-                comment = p['Commentaire']['rich_text'][0]['plain_text'] if p['Commentaire']['rich_text'] else "Sans commentaire"
+                p = res.get('properties', {})
+    
+                # 1. Date
+                date_prop = p.get('Date Intervention', {}).get('date')
+                date_val = date_prop.get('start', 'Date inconnue') if date_prop else "Date inconnue"
                 
+                # 2. Client (Rollup)
+                client_rollup = p.get('Client Nom', {}).get('rollup', {}).get('array', [])
+                client = "Client inconnu"
+                if client_rollup:
+                    first_item = client_rollup[0]
+                    client = first_item.get('title', [{}])[0].get('plain_text', 
+                             first_item.get('plain_text', "Client inconnu"))
+
+                # 3. Prestation (Rollup)
+                presta_rollup = p.get('Prestation Titre', {}).get('rollup', {}).get('array', [])
+                prestation = "Prestation inconnue"
+                if presta_rollup:
+                    first_item = presta_rollup[0]
+                    prestation = first_item.get('title', [{}])[0].get('plain_text', 
+                                 first_item.get('plain_text', "Prestation inconnue"))
+                
+                # 4. ADRESSE DU SITE
+                adresse_rollup = p.get('Adresse Site', {}).get('rollup', {}).get('array', [])
+                adresse = "-" 
+                if adresse_rollup:
+                    first_addr = adresse_rollup[0]
+                    addr_text_list = first_addr.get('rich_text', [])
+                    if addr_text_list:
+                        adresse = addr_text_list[0].get('plain_text', "-")
+                    else:
+                        adresse = first_addr.get('plain_text', "-")
+
+                # 5. Commentaire
+                comment_list = p.get('Commentaire', {}).get('rich_text', [])
+                comment = comment_list[0].get('plain_text', "Sans commentaire") if comment_list else "Sans commentaire"
+                
+                # 6. AFFICHAGE (Maintenant bien indenté dans la boucle)
                 st.markdown(f"""
                 <div class="hist-card">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <strong>📅 {date_val}</strong>
-                        <span class="client-tag">Enregistré</span>
+                    <div style="display:flex; justify-content:space-between; align-items:start;">
+                        <div>
+                            <span class="client-tag">{client}</span><br>
+                            <strong style="font-size: 1.1em; color: #1f2937;">{prestation}</strong>
+                        </div>
+                        <div style="text-align: right; font-size: 0.85em; color: #6b7280;">
+                            📅 {date_val}
+                        </div>
                     </div>
-                    <p style="margin:5px 0; font-size:0.95em;">💬 {comment}</p>
+                    <div style="margin-top: 5px; font-size: 0.85em; color: #01579b;">
+                        📍 {adresse}
+                    </div>
+                    <hr style="margin: 10px 0; border: 0; border-top: 1px solid #eee;">
+                    <div style="font-style: italic; color: #4b5563; font-size: 0.9em;">
+                        💬 {comment}
+                    </div>
                 </div>
                 """, unsafe_allow_html=True)
-
+                
 # --- PAGE SAISIE ---
 else:
     st.title("🛠 Saisie Interventions")
