@@ -45,6 +45,13 @@ st.markdown("""
         text-align: right;
         margin-bottom: 20px;
     }
+    .stCanvas {
+        border: 1px solid #F0F2F6;
+        border-radius: 10px;
+    }
+    button[title="Send to Streamlit"], button[title="Download"] {
+        display: none !important;
+    } 
     </style>
     """, unsafe_allow_html=True)
 
@@ -57,6 +64,10 @@ if 'canvas_key' not in st.session_state:
     st.session_state.canvas_key = 0
 if 'page' not in st.session_state:
     st.session_state.page = "saisie"
+if 'reset_sig_client' not in st.session_state:
+    st.session_state.reset_sig_client = 0
+if 'reset_sig_inter' not in st.session_state:
+    st.session_state.reset_sig_inter = 0
 
 # --- MODAL DE SUCCÈS ---
 @st.dialog("🚀 Opération réussie !")
@@ -99,7 +110,6 @@ if st.session_state.user is None:
 
 # --- NAVIGATION & HEADER ---
 user = st.session_state.user
-# Création d'une ligne avec les infos à gauche et le bouton à droite
 header_col1, header_col2 = st.columns([4, 1])
 
 with header_col1:
@@ -112,14 +122,12 @@ with header_col1:
 
 with header_col2:
     if st.button("🚪 Déconnexion", key="logout_btn"):
-        # On vide les variables de session importantes
         st.session_state.user = None
         st.session_state.multi_interventions = []
         st.session_state.page = "saisie"
         st.rerun()
 
-st.divider() # Une petite ligne pour séparer le header du contenu
-# Barre de navigation simple
+st.divider() 
 nav_col1, nav_col2, nav_col3 = st.columns([1,1,2])
 if nav_col1.button("🏠 Accueil"):
     st.session_state.page = "saisie"
@@ -140,15 +148,14 @@ if st.session_state.page == "historique":
         if not history:
             st.info("Aucun historique disponible.")
         else:
-            # DÉBUT DE LA BOUCLE
             for res in history:
                 p = res.get('properties', {})
-    
+                
                 # 1. Date
                 date_prop = p.get('Date Intervention', {}).get('date')
                 date_val = date_prop.get('start', 'Date inconnue') if date_prop else "Date inconnue"
                 
-                # 2. Client (Rollup)
+                # 2. Client
                 client_rollup = p.get('Client Nom', {}).get('rollup', {}).get('array', [])
                 client = "Client inconnu"
                 if client_rollup:
@@ -156,17 +163,17 @@ if st.session_state.page == "historique":
                     client = first_item.get('title', [{}])[0].get('plain_text', 
                              first_item.get('plain_text', "Client inconnu"))
 
-                # 3. Prestation (Rollup)
+                # 3. Prestation
                 presta_rollup = p.get('Prestation Titre', {}).get('rollup', {}).get('array', [])
                 prestation = "Prestation inconnue"
                 if presta_rollup:
                     first_item = presta_rollup[0]
                     prestation = first_item.get('title', [{}])[0].get('plain_text', 
                                  first_item.get('plain_text', "Prestation inconnue"))
-                
-                # 4. ADRESSE DU SITE
+
+                # 4. Adresse Site
                 adresse_rollup = p.get('Adresse Site', {}).get('rollup', {}).get('array', [])
-                adresse = "-" 
+                adresse = "-"
                 if adresse_rollup:
                     first_addr = adresse_rollup[0]
                     addr_text_list = first_addr.get('rich_text', [])
@@ -179,7 +186,7 @@ if st.session_state.page == "historique":
                 comment_list = p.get('Commentaire', {}).get('rich_text', [])
                 comment = comment_list[0].get('plain_text', "Sans commentaire") if comment_list else "Sans commentaire"
                 
-                # 6. AFFICHAGE (Maintenant bien indenté dans la boucle)
+                # 6. Affichage
                 st.markdown(f"""
                 <div class="hist-card">
                     <div style="display:flex; justify-content:space-between; align-items:start;">
@@ -200,12 +207,11 @@ if st.session_state.page == "historique":
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
-                
+
 # --- PAGE SAISIE ---
 else:
     st.title("🛠 Saisie Interventions")
     
-    # --- ÉTAPE 1 : SÉLECTION DU CLIENT ---
     all_clients = api.get_all_clients(user_data=user)
     client_name = st.selectbox("🎯 Choisir le Client", options=[""] + list(all_clients.keys()))
 
@@ -217,9 +223,9 @@ else:
                 st.session_state.cached_prestas = api.get_prestations_for_client(client_id)
                 st.session_state.last_selected_client = client_name
 
-        # --- ÉTAPE 2 : FORMULAIRE D'AJOUT ---
         with st.expander(f"➕ Ajouter une intervention pour {client_name}", expanded=True):
-            with st.form("form_inter", clear_on_submit=True):
+            # Utilisation d'un container au lieu d'un st.form pour autoriser les boutons "Effacer"
+            with st.container():
                 col1, col2 = st.columns([2, 1])
                 with col1:
                     presta_options = list(st.session_state.cached_prestas.keys())
@@ -231,28 +237,50 @@ else:
                 photos = st.file_uploader("📸 Preuves photos", type=['png', 'jpg', 'jpeg'], accept_multiple_files=True)
 
                 st.write("✍️ **Signatures**")
+                st.info("💡 Utilisez la petite corbeille en bas à gauche du cadre pour effacer.")
                 col_sig_a, col_sig_b = st.columns(2)
+                
                 with col_sig_a:
                     st.caption("Signature Client")
-                    canvas_client = st_canvas(stroke_width=2, stroke_color="#000", background_color="#F0F2F6", height=100, key=f"sig_client_{st.session_state.canvas_key}", display_toolbar=False, update_streamlit=True)
+                    canvas_client = st_canvas(
+                        stroke_width=2, 
+                        stroke_color="#000", 
+                        background_color="#F0F2F6", 
+                        height=120, 
+                        key=f"sig_c_{st.session_state.canvas_key}", # Clé simplifiée
+                        display_toolbar=True,
+                        update_streamlit=False
+                    )
+    
+                        
                 with col_sig_b:
                     st.caption("Signature Intervenant")
-                    canvas_inter = st_canvas(stroke_width=2, stroke_color="#000", background_color="#F0F2F6", height=100, key=f"sig_inter_{st.session_state.canvas_key}", display_toolbar=False, update_streamlit=True)
-                
-                submitted = st.form_submit_button("Ajouter au panier")
-                
-                if submitted and presta_choice:
-                    st.session_state.multi_interventions.append({
-                        "client_name": client_name, "client_id": client_id,
-                        "nom_presta": presta_choice, "id_presta": st.session_state.cached_prestas[presta_choice],
-                        "date": str(date_choice), "commentaire": comment, "intervenant_id": user['id'],
-                        "photos": photos if photos else [],
-                        "canvas_client_data": canvas_client.image_data,
-                        "canvas_inter_data": canvas_inter.image_data
-                    })
-                    st.session_state.canvas_key += 1
-                    st.toast(f"Ajouté : {presta_choice}")
-                    st.rerun()
+                    canvas_inter = st_canvas(
+                        stroke_width=2, 
+                        stroke_color="#000", 
+                        background_color="#F0F2F6", 
+                        height=120, 
+                        key=f"sig_i_{st.session_state.canvas_key}", # Clé simplifiée
+                        display_toolbar=True, # LE SECRET EST LÀ !
+                        update_streamlit=True
+                    )
+                    # Plus besoin de bouton d'effacement Python !
+                # Bouton d'ajout au panier
+                if st.button("Ajouter au panier", type="primary"):
+                    if presta_choice:
+                        st.session_state.multi_interventions.append({
+                            "client_name": client_name, "client_id": client_id,
+                            "nom_presta": presta_choice, "id_presta": st.session_state.cached_prestas[presta_choice],
+                            "date": str(date_choice), "commentaire": comment, "intervenant_id": user['id'],
+                            "photos": photos if photos else [],
+                            "canvas_client_data": canvas_client.image_data,
+                            "canvas_inter_data": canvas_inter.image_data
+                        })
+                        st.session_state.canvas_key += 1
+                        st.toast(f"Ajouté : {presta_choice}")
+                        st.rerun()
+                    else:
+                        st.warning("Veuillez sélectionner une prestation.")
 
     # --- ÉTAPE 3 : RÉCAPITULATIF ET ENVOI ---
     if st.session_state.multi_interventions:
@@ -266,22 +294,23 @@ else:
                     st.session_state.multi_interventions.pop(i)
                     st.rerun()
 
-        if st.button("🚀 ENREGISTRER TOUT DANS NOTION", type="primary"):
+        if st.button("🚀 ENREGISTRER TOUT DANS NOTION", type="primary", use_container_width=True):
             config = api.get_notion_config()
             success_count = 0
             total = len(st.session_state.multi_interventions)
             progress_bar = st.progress(0)
             
             for idx, inter in enumerate(st.session_state.multi_interventions):
-                with st.spinner(f"Envoi {idx+1}/{total}..."):     
-                    # 1. Traitement des Photos
+                with st.spinner(f"Envoi {idx+1}/{total}..."):
+                    
+                    # 1. Photos
                     list_files_notion = []
                     for p in inter.get('photos', []):
                         url = api.upload_image_to_cloud(p)
                         if url:
                             list_files_notion.append({"name": p.name, "external": {"url": url}})
 
-                    # 2. Traitement des Signatures
+                    # 2. Signatures
                     url_sig_client = None
                     if inter.get('canvas_client_data') is not None:
                         img_c = api.convert_canvas_to_image(inter['canvas_client_data'])
@@ -294,7 +323,7 @@ else:
                         if img_i:
                             url_sig_inter = api.upload_image_to_cloud(img_i)
 
-                    # 3. Construction du Payload RÉEL pour Notion
+                    # 3. Payload
                     props = {
                         "Date Intervention": {"date": {"start": inter['date']}},
                         "Client": {"relation": [{"id": inter['client_id']}]},
@@ -303,7 +332,6 @@ else:
                         "Intervenants": {"relation": [{"id": inter['intervenant_id']}]}
                     }
 
-                    # Ajout des fichiers si présents
                     if list_files_notion:
                         props["Preuves"] = {"files": list_files_notion}
                     if url_sig_client:
@@ -316,18 +344,16 @@ else:
                         "properties": props
                     }
                     
-                    # 4. Envoi réel
+                    # 4. Envoi
                     res = api.create_intervention_page(payload)
                     
                     if res.status_code in [200, 201]:
                         success_count += 1
                     else:
-                        st.error(f"Erreur Notion sur l'item {idx+1}: {res.text}")
+                        st.error(f"Erreur sur l'item {idx+1}: {res.text}")
                 
                 progress_bar.progress((idx + 1) / total)
             
             if success_count == total and total > 0:
                 st.session_state.multi_interventions = []
-                show_success_modal(success_count)   
-            elif success_count > 0:
-                st.warning(f"Succès partiel : {success_count}/{total}")
+                show_success_modal(success_count)
