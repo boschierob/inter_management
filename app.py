@@ -227,18 +227,61 @@ else:
             progress_bar = st.progress(0)
             
             for idx, inter in enumerate(st.session_state.multi_interventions):
-                with st.spinner(f"Envoi {idx+1}/{total}..."):
-                    # ... (Garder ici ta logique de traitement photos/signatures identique) ...
-                    # Simulation de l'appel pour l'exemple (à garder tel quel dans ton code)
-                    res = api.create_intervention_page({"parent": {"database_id": config['db_interventions']}, "properties": {}}) # Version simplifiée pour l'ex
+                with st.spinner(f"Envoi {idx+1}/{total}..."):     
+                    # 1. Traitement des Photos
+                    list_files_notion = []
+                    for p in inter.get('photos', []):
+                        url = api.upload_image_to_cloud(p)
+                        if url:
+                            list_files_notion.append({"name": p.name, "external": {"url": url}})
+
+                    # 2. Traitement des Signatures
+                    url_sig_client = None
+                    if inter.get('canvas_client_data') is not None:
+                        img_c = api.convert_canvas_to_image(inter['canvas_client_data'])
+                        if img_c:
+                            url_sig_client = api.upload_image_to_cloud(img_c)
+
+                    url_sig_inter = None
+                    if inter.get('canvas_inter_data') is not None:
+                        img_i = api.convert_canvas_to_image(inter['canvas_inter_data'])
+                        if img_i:
+                            url_sig_inter = api.upload_image_to_cloud(img_i)
+
+                    # 3. Construction du Payload RÉEL pour Notion
+                    props = {
+                        "Date Intervention": {"date": {"start": inter['date']}},
+                        "Client": {"relation": [{"id": inter['client_id']}]},
+                        "Lien Prestation": {"relation": [{"id": inter['id_presta']}]},
+                        "Commentaire": {"rich_text": [{"text": {"content": inter['commentaire']}}]},
+                        "Intervenants": {"relation": [{"id": inter['intervenant_id']}]}
+                    }
+
+                    # Ajout des fichiers si présents
+                    if list_files_notion:
+                        props["Preuves"] = {"files": list_files_notion}
+                    if url_sig_client:
+                        props["Signature Client"] = {"files": [{"name": "sig_client.png", "external": {"url": url_sig_client}}]}
+                    if url_sig_inter:
+                        props["Signature Intervenant"] = {"files": [{"name": "sig_inter.png", "external": {"url": url_sig_inter}}]}
+
+                    payload = {
+                        "parent": {"database_id": config['db_interventions']},
+                        "properties": props
+                    }
                     
-                    # NOTE : Remets bien ici ton bloc complet de construction du payload 'props' que tu avais avant
+                    # 4. Envoi réel
+                    res = api.create_intervention_page(payload)
+                    
                     if res.status_code in [200, 201]:
                         success_count += 1
-                    progress_bar.progress((idx + 1) / total)
+                    else:
+                        st.error(f"Erreur Notion sur l'item {idx+1}: {res.text}")
+                
+                progress_bar.progress((idx + 1) / total)
             
             if success_count == total and total > 0:
                 st.session_state.multi_interventions = []
-                show_success_modal(success_count) # APPEL DU MODAL
+                show_success_modal(success_count)   
             elif success_count > 0:
                 st.warning(f"Succès partiel : {success_count}/{total}")
