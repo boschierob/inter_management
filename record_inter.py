@@ -126,19 +126,46 @@ def login_user(email_saisi, pin_saisi):
 
 # --- FETCH DONNÉES INTERFACE ---
 
+@st.cache_data(ttl=600)  # Supprime les lenteurs en gardant la liste en mémoire 10 min
 def get_all_clients(user_data=None):
     config = get_notion_config()
-    if not user_data or any(role in ['Admin', 'Gérant'] for role in user_data['roles']):
+    
+    # 1. Sécurité : si pas d'utilisateur, on ne renvoie rien
+    if not user_data:
+        return {}
+
+    # 2. Définition des rôles avec accès total
+    roles_admin = ['Admin', 'Gérant']
+    user_roles = user_data.get('roles', [])
+    
+    # Vérification : est-ce que l'utilisateur a au moins un rôle d'admin ?
+    is_admin = any(role in roles_admin for role in user_roles)
+
+    if is_admin:
+        # ACCÈS TOTAL : Pas de filtre
         clients_data = query_notion(config['db_clients'])
     else:
+        # ACCÈS RESTREINT (Employé ou Sous-traitant)
+        # On filtre par la relation "Intervenants" dans la base Clients
         filter_payload = {
             "filter": {
-                "property": "Intervenant(s) Responsable(s)",
-                "relation": {"contains": user_data['id']}
+                "property": "Intervenants", # Nom exact de la colonne dans Notion
+                "relation": {
+                    "contains": user_data['id'] # ID de l'intervenant connecté
+                }
             }
         }
         clients_data = query_notion(config['db_clients'], filter_payload)
-    return {get_title(c, 'Name'): c['id'] for c in clients_data}
+
+    # 3. Formatage pour le selectbox de Streamlit { "Nom du Client": "ID_Notion" }
+    clients_dict = {}
+    for c in clients_data:
+        # get_title est ta fonction qui extrait le texte de la propriété 'Name'
+        name = get_title(c, 'Name') 
+        if name:
+            clients_dict[name] = c['id']
+            
+    return clients_dict
 
 def get_prestations_for_client(id_client):
     config = get_notion_config()
