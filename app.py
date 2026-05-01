@@ -6,30 +6,23 @@ try:
     from streamlit_canvas import st_canvas
 except ImportError:
     from streamlit_drawable_canvas import st_canvas
+import numpy as np
 from PIL import Image
 import io
 
 # 1. Configurer la page
 st.set_page_config(page_title="Gestion Interventions", layout="centered")
 
-# --- STYLE CSS AMÉLIORÉ ---
+# --- STYLE CSS ---
 st.markdown("""
     <style>
     .stButton>button { width: 100%; border-radius: 8px; height: 3em; margin-top: 10px; }
-    .card {
-        padding: 1.2rem;
-        border-radius: 10px;
-        background-color: #ffffff;
-        border: 1px solid #e6e9ef;
-        margin-bottom: 0.8rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
     .hist-card {
         padding: 1rem;
         border-left: 5px solid #01579b;
         background-color: #f8f9fa;
         border-radius: 5px;
-        margin-bottom: 10px;
+        margin-bottom: 5px;
     }
     .client-tag {
         background-color: #e1f5fe;
@@ -39,19 +32,13 @@ st.markdown("""
         font-size: 0.8em;
         font-weight: bold;
     }
-    .user-info {
-        font-size: 0.9em;
-        color: #666;
-        text-align: right;
-        margin-bottom: 20px;
+    .panier-item {
+        padding: 10px;
+        background-color: #ffffff;
+        border: 1px solid #eee;
+        border-radius: 8px;
+        margin-bottom: 10px;
     }
-    .stCanvas {
-        border: 1px solid #F0F2F6;
-        border-radius: 10px;
-    }
-    button[title="Send to Streamlit"], button[title="Download"] {
-        display: none !important;
-    } 
     </style>
     """, unsafe_allow_html=True)
 
@@ -64,296 +51,220 @@ if 'canvas_key' not in st.session_state:
     st.session_state.canvas_key = 0
 if 'page' not in st.session_state:
     st.session_state.page = "saisie"
-if 'reset_sig_client' not in st.session_state:
-    st.session_state.reset_sig_client = 0
-if 'reset_sig_inter' not in st.session_state:
-    st.session_state.reset_sig_inter = 0
 
-# --- MODAL DE SUCCÈS ---
+# --- MODAL D'ÉDITION ---
+@st.dialog("📝 Modifier l'intervention", width="large")
+def edit_modal(page_id, current_date, current_comment):
+    try:
+        val_date = datetime.strptime(current_date, "%Y-%m-%d")
+    except:
+        val_date = datetime.now()
+        
+    new_date = st.date_input("Date Intervention", value=val_date)
+    new_comment = st.text_area("Commentaire", value=current_comment)
+    new_photos = st.file_uploader("📸 Remplacer les photos", type=['png', 'jpg', 'jpeg'], accept_multiple_files=True)
+    
+    st.write("✍️ **Signatures**")
+    col_sig_a, col_sig_b = st.columns(2)
+    with col_sig_a:
+        canvas_c = st_canvas(stroke_width=2, stroke_color="#000", background_color="#F0F2F6", height=120, key=f"edit_c_{page_id}")
+    with col_sig_b:
+        canvas_i = st_canvas(stroke_width=2, stroke_color="#000", background_color="#F0F2F6", height=120, key=f"edit_i_{page_id}")
+
+    # --- BOUTONS ACTIONS ---
+    st.write("---") # Séparateur visuel
+    col_btn_save, col_btn_cancel = st.columns(2)
+    
+    with col_btn_save:
+        if st.button("🚀 Enregistrer les modifications", type="primary", use_container_width=True):
+            with st.spinner("Mise à jour..."):
+                props = {
+                    "Date Intervention": {"date": {"start": str(new_date)}},
+                    "Commentaire": {"rich_text": [{"text": {"content": new_comment}}]}
+                }
+                if new_photos:
+                    list_files = []
+                    for p in new_photos:
+                        url = api.upload_image_to_cloud(p)
+                        if url: list_files.append({"name": p.name, "external": {"url": url}})
+                    props["Preuves"] = {"files": list_files}
+                
+                if canvas_c.image_data is not None and np.any(canvas_c.image_data[:, :, 3] > 0):
+                    img_c = api.convert_canvas_to_image(canvas_c.image_data)
+                    url_c = api.upload_image_to_cloud(img_c)
+                    if url_c: props["Signature Client"] = {"files": [{"name": "sc.png", "external": {"url": url_c}}]}
+
+                if canvas_i.image_data is not None and np.any(canvas_i.image_data[:, :, 3] > 0):
+                    img_i = api.convert_canvas_to_image(canvas_i.image_data)
+                    url_i = api.upload_image_to_cloud(img_i)
+                    if url_i: props["Signature Intervenant"] = {"files": [{"name": "si.png", "external": {"url": url_i}}]}
+
+                if api.update_intervention(page_id, props):
+                    st.success("Modifié !")
+                    st.rerun()
+
+    with col_btn_cancel:
+        # Un simple st.rerun() ferme le modal car l'état du bouton d'édition sera réinitialisé
+        if st.button("❌ Annuler", use_container_width=True):
+            st.rerun()
+
 @st.dialog("🚀 Opération réussie !")
 def show_success_modal(count):
     st.balloons()
-    st.success(f"Félicitations ! {count} intervention(s) ont été enregistrées dans Notion.")
-    st.write("Que souhaitez-vous faire maintenant ?")
+    st.success(f"Félicitations ! {count} intervention(s) ont été enregistrées avec succès dans Notion.")
     
     col1, col2 = st.columns(2)
     with col1:
         if st.button("➕ Nouvelle saisie"):
-            st.session_state.canvas_key += 1
+            st.session_state.canvas_key += 1 # Reset les canvas
             st.rerun()
     with col2:
         if st.button("📋 Voir l'historique"):
             st.session_state.page = "historique"
             st.rerun()
-    
-    st.divider()
-    if st.button("🏠 Retour à l'accueil"):
-        st.rerun()
 
-# --- ÉCRAN DE CONNEXION ---
+# --- CONNEXION ---
 if st.session_state.user is None:
     st.title("🔐 Connexion")
-    with st.form("login_form"):
-        email = st.text_input("Email Professionnel")
-        pin = st.text_input("Code PIN (4 chiffres)", type="password", max_chars=4)
-        submit_login = st.form_submit_button("Se connecter")
-        
-        if submit_login:
-            with st.spinner("Vérification..."):
-                user_data = api.login_user(email, pin)
-                if user_data:
-                    st.session_state.user = user_data
-                    st.rerun()
-                else:
-                    st.error("Email ou PIN incorrect.")
-    st.stop() 
+    with st.form("login"):
+        email = st.text_input("Email")
+        pin = st.text_input("PIN", type="password")
+        if st.form_submit_button("Se connecter"):
+            u = api.login_user(email, pin)
+            if u: st.session_state.user = u; st.rerun()
+    st.stop()
 
-# --- NAVIGATION & HEADER ---
+# --- NAVIGATION ---
 user = st.session_state.user
-header_col1, header_col2 = st.columns([4, 1])
+c1, c2 = st.columns([4, 1])
+with c1: st.write(f"👤 **{user['name']}**")
+with c2: 
+    if st.button("🚪"): st.session_state.user = None; st.rerun()
 
-with header_col1:
-    st.markdown(f"""
-        <div style="padding-top: 10px;">
-            👤 <strong>{user['name']}</strong> 
-            <span style="color: #666; font-size: 0.85em;">({", ".join(user['roles'])})</span>
-        </div>
-    """, unsafe_allow_html=True)
-
-with header_col2:
-    if st.button("🚪 Déconnexion", key="logout_btn"):
-        st.session_state.user = None
-        st.session_state.multi_interventions = []
-        st.session_state.page = "saisie"
-        st.rerun()
-
-st.divider() 
-nav_col1, nav_col2, nav_col3 = st.columns([1,1,2])
-if nav_col1.button("🏠 Accueil"):
-    st.session_state.page = "saisie"
-    st.rerun()
-if nav_col2.button("📋 Historique"):
-    st.session_state.page = "historique"
-    st.rerun()
+st.divider()
+n1, n2, _ = st.columns([1,1,2])
+if n1.button("🏠 Saisie"): st.session_state.page = "saisie"; st.rerun()
+if n2.button("📋 Historique"): st.session_state.page = "historique"; st.rerun()
 
 # --- PAGE HISTORIQUE ---
 if st.session_state.page == "historique":
-    st.title("📋 Historique des enregistrements")
-    if st.button("⬅️ Précédent"):
-        st.session_state.page = "saisie"
-        st.rerun()
+    st.title("📋 Historique")
+    history = api.get_interventions_history(user)
+    if not history: st.info("Vide.")
+    else:
+        for res in history:
+            pid = res.get('id')
+            p = res.get('properties', {})
+            d_val = p.get('Date Intervention', {}).get('date', {}).get('start', "")
+            
+            # Logique originale pour les noms
+            cl_r = p.get('Client Nom', {}).get('rollup', {}).get('array', [])
+            cl_name = cl_r[0].get('title', [{}])[0].get('plain_text', "Client") if cl_r else "Client"
+            
+            pr_r = p.get('Prestation Titre', {}).get('rollup', {}).get('array', [])
+            pr_name = pr_r[0].get('title', [{}])[0].get('plain_text', "Prestation") if pr_r else "Prestation"
+            
+            c_rich = p.get('Commentaire', {}).get('rich_text', [])
+            c_val = c_rich[0].get('plain_text', "") if c_rich else ""
 
-    with st.spinner("Récupération des données..."):
-        history = api.get_interventions_history(user)
-        if not history:
-            st.info("Aucun historique disponible.")
-        else:
-            for res in history:
-                p = res.get('properties', {})
-                
-                # 1. Date
-                date_prop = p.get('Date Intervention', {}).get('date')
-                date_val = date_prop.get('start', 'Date inconnue') if date_prop else "Date inconnue"
-                
-                # 2. Client
-                client_rollup = p.get('Client Nom', {}).get('rollup', {}).get('array', [])
-                client = "Client inconnu"
-                if client_rollup:
-                    first_item = client_rollup[0]
-                    client = first_item.get('title', [{}])[0].get('plain_text', 
-                             first_item.get('plain_text', "Client inconnu"))
-
-                # 3. Prestation
-                presta_rollup = p.get('Prestation Titre', {}).get('rollup', {}).get('array', [])
-                prestation = "Prestation inconnue"
-                if presta_rollup:
-                    first_item = presta_rollup[0]
-                    prestation = first_item.get('title', [{}])[0].get('plain_text', 
-                                 first_item.get('plain_text', "Prestation inconnue"))
-
-                # 4. Adresse Site
-                adresse_rollup = p.get('Adresse Site', {}).get('rollup', {}).get('array', [])
-                adresse = "-"
-                if adresse_rollup:
-                    first_addr = adresse_rollup[0]
-                    addr_text_list = first_addr.get('rich_text', [])
-                    if addr_text_list:
-                        adresse = addr_text_list[0].get('plain_text', "-")
-                    else:
-                        adresse = first_addr.get('plain_text', "-")
-
-                # 5. Commentaire
-                comment_list = p.get('Commentaire', {}).get('rich_text', [])
-                comment = comment_list[0].get('plain_text', "Sans commentaire") if comment_list else "Sans commentaire"
-                
-                # 6. Affichage
-                st.markdown(f"""
-                <div class="hist-card">
-                    <div style="display:flex; justify-content:space-between; align-items:start;">
-                        <div>
-                            <span class="client-tag">{client}</span><br>
-                            <strong style="font-size: 1.1em; color: #1f2937;">{prestation}</strong>
-                        </div>
-                        <div style="text-align: right; font-size: 0.85em; color: #6b7280;">
-                            📅 {date_val}
-                        </div>
-                    </div>
-                    <div style="margin-top: 5px; font-size: 0.85em; color: #01579b;">
-                        📍 {adresse}
-                    </div>
-                    <hr style="margin: 10px 0; border: 0; border-top: 1px solid #eee;">
-                    <div style="font-style: italic; color: #4b5563; font-size: 0.9em;">
-                        💬 {comment}
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
+            st.markdown(f'<div class="hist-card"><span class="client-tag">{cl_name}</span><br><strong>{pr_name}</strong> | {d_val}</div>', unsafe_allow_html=True)
+            col_e, col_d, _ = st.columns([1, 1, 2])
+            if col_e.button("📝", key=f"e_{pid}"): edit_modal(pid, d_val, c_val)
+            if col_d.button("🗑️", key=f"d_{pid}"): 
+                if api.delete_intervention(pid): st.rerun()
+            st.divider()
 
 # --- PAGE SAISIE ---
 else:
-    st.title("🛠 Saisie Interventions")
-    
+    st.title("🛠 Saisie")
     all_clients = api.get_all_clients(user_data=user)
-    client_name = st.selectbox("🎯 Choisir le Client", options=[""] + list(all_clients.keys()))
+    c_name = st.selectbox("Client", options=[""] + list(all_clients.keys()))
 
-    if client_name:
-        client_id = all_clients[client_name]
+    if c_name:
+        cl_id = all_clients[c_name]
+        prestas = api.get_prestations_for_client(cl_id)
         
-        if 'cached_prestas' not in st.session_state or st.session_state.get('last_selected_client') != client_name:
-            with st.spinner(f"Chargement des prestations..."):
-                st.session_state.cached_prestas = api.get_prestations_for_client(client_id)
-                st.session_state.last_selected_client = client_name
+        with st.expander("Détails de l'intervention", expanded=True):
+            p_choice = st.selectbox("Prestation", options=list(prestas.keys()))
+            d_choice = st.date_input("Date", value=datetime.now())
+            comment = st.text_area("Commentaire")
+            files = st.file_uploader("Photos", type=['png','jpg','jpeg'], accept_multiple_files=True)
+            
+            col_a, col_b = st.columns(2)
+            with col_a:
+                st.caption("Signature Client")
+                cv_c = st_canvas(stroke_width=2, stroke_color="#000", background_color="#F0F2F6", height=120, key=f"c_{st.session_state.canvas_key}")
+            with col_b:
+                st.caption("Signature Intervenant")
+                cv_i = st_canvas(stroke_width=2, stroke_color="#000", background_color="#F0F2F6", height=120, key=f"i_{st.session_state.canvas_key}")
 
-        with st.expander(f"➕ Ajouter une intervention pour {client_name}", expanded=True):
-            # Utilisation d'un container au lieu d'un st.form pour autoriser les boutons "Effacer"
-            with st.container():
-                col1, col2 = st.columns([2, 1])
-                with col1:
-                    presta_options = list(st.session_state.cached_prestas.keys())
-                    presta_choice = st.selectbox("Prestation", options=presta_options)
-                with col2:
-                    date_choice = st.date_input("Date", value=datetime.now())
-                
-                comment = st.text_area("Commentaire (optionnel)")
-                photos = st.file_uploader("📸 Preuves photos", type=['png', 'jpg', 'jpeg'], accept_multiple_files=True)
+            if st.button("➕ Ajouter au panier", type="primary"):
+                st.session_state.multi_interventions.append({
+                    "client_name": c_name, "client_id": cl_id,
+                    "nom_presta": p_choice, "id_presta": prestas[p_choice],
+                    "date": str(d_choice), "commentaire": comment, "intervenant_id": user['id'],
+                    "photos": files if files else [],
+                    "canvas_client_data": cv_c.image_data,
+                    "canvas_inter_data": cv_i.image_data
+                })
+                st.session_state.canvas_key += 1
+                st.rerun()
 
-                st.write("✍️ **Signatures**")
-                st.info("💡 Utilisez la petite corbeille en bas à gauche du cadre pour effacer.")
-                col_sig_a, col_sig_b = st.columns(2)
-                
-                with col_sig_a:
-                    st.caption("Signature Client")
-                    canvas_client = st_canvas(
-                        stroke_width=2, 
-                        stroke_color="#000", 
-                        background_color="#F0F2F6", 
-                        height=120, 
-                        key=f"sig_c_{st.session_state.canvas_key}", # Clé simplifiée
-                        display_toolbar=True,
-                        update_streamlit=False
-                    )
     
-                        
-                with col_sig_b:
-                    st.caption("Signature Intervenant")
-                    canvas_inter = st_canvas(
-                        stroke_width=2, 
-                        stroke_color="#000", 
-                        background_color="#F0F2F6", 
-                        height=120, 
-                        key=f"sig_i_{st.session_state.canvas_key}", # Clé simplifiée
-                        display_toolbar=True, # LE SECRET EST LÀ !
-                        update_streamlit=True
-                    )
-                    # Plus besoin de bouton d'effacement Python !
-                # Bouton d'ajout au panier
-                if st.button("Ajouter au panier", type="primary"):
-                    if presta_choice:
-                        st.session_state.multi_interventions.append({
-                            "client_name": client_name, "client_id": client_id,
-                            "nom_presta": presta_choice, "id_presta": st.session_state.cached_prestas[presta_choice],
-                            "date": str(date_choice), "commentaire": comment, "intervenant_id": user['id'],
-                            "photos": photos if photos else [],
-                            "canvas_client_data": canvas_client.image_data,
-                            "canvas_inter_data": canvas_inter.image_data
-                        })
-                        st.session_state.canvas_key += 1
-                        st.toast(f"Ajouté : {presta_choice}")
-                        st.rerun()
-                    else:
-                        st.warning("Veuillez sélectionner une prestation.")
-
-    # --- ÉTAPE 3 : RÉCAPITULATIF ET ENVOI ---
+       # --- SECTION PANIER AVEC SUPPRESSION ---
     if st.session_state.multi_interventions:
         st.divider()
-        st.subheader(f"📝 Panier ({len(st.session_state.multi_interventions)})")
+        st.subheader(f"🛒 Panier ({len(st.session_state.multi_interventions)})")
         
-        for i, item in enumerate(st.session_state.multi_interventions):
-            with st.container():
-                st.markdown(f'<div class="card"><span class="client-tag">{item["client_name"]}</span><br><strong>{item["nom_presta"]}</strong><br>📅 {item["date"]}</div>', unsafe_allow_html=True)
-                if st.button(f"Retirer", key=f"del_{i}"):
-                    st.session_state.multi_interventions.pop(i)
-                    st.rerun()
-
-        if st.button("🚀 ENREGISTRER TOUT DANS NOTION", type="primary", use_container_width=True):
-            config = api.get_notion_config()
-            success_count = 0
-            total = len(st.session_state.multi_interventions)
-            progress_bar = st.progress(0)
-            
-            for idx, inter in enumerate(st.session_state.multi_interventions):
-                with st.spinner(f"Envoi {idx+1}/{total}..."):
-                    
-                    # 1. Photos
-                    list_files_notion = []
-                    for p in inter.get('photos', []):
-                        url = api.upload_image_to_cloud(p)
-                        if url:
-                            list_files_notion.append({"name": p.name, "external": {"url": url}})
-
-                    # 2. Signatures
-                    url_sig_client = None
-                    if inter.get('canvas_client_data') is not None:
-                        img_c = api.convert_canvas_to_image(inter['canvas_client_data'])
-                        if img_c:
-                            url_sig_client = api.upload_image_to_cloud(img_c)
-
-                    url_sig_inter = None
-                    if inter.get('canvas_inter_data') is not None:
-                        img_i = api.convert_canvas_to_image(inter['canvas_inter_data'])
-                        if img_i:
-                            url_sig_inter = api.upload_image_to_cloud(img_i)
-
-                    # 3. Payload
-                    props = {
-                        "Date Intervention": {"date": {"start": inter['date']}},
-                        "Client": {"relation": [{"id": inter['client_id']}]},
-                        "Lien Prestation": {"relation": [{"id": inter['id_presta']}]},
-                        "Commentaire": {"rich_text": [{"text": {"content": inter['commentaire']}}]},
-                        "Intervenants": {"relation": [{"id": inter['intervenant_id']}]}
-                    }
-
-                    if list_files_notion:
-                        props["Preuves"] = {"files": list_files_notion}
-                    if url_sig_client:
-                        props["Signature Client"] = {"files": [{"name": "sig_client.png", "external": {"url": url_sig_client}}]}
-                    if url_sig_inter:
-                        props["Signature Intervenant"] = {"files": [{"name": "sig_inter.png", "external": {"url": url_sig_inter}}]}
-
-                    payload = {
-                        "parent": {"database_id": config['db_interventions']},
-                        "properties": props
-                    }
-                    
-                    # 4. Envoi
-                    res = api.create_intervention_page(payload)
-                    
-                    if res.status_code in [200, 201]:
-                        success_count += 1
-                    else:
-                        st.error(f"Erreur sur l'item {idx+1}: {res.text}")
+        for index, item in enumerate(st.session_state.multi_interventions):
+            # On crée un container avec une bordure légère pour chaque intervention
+            with st.container(border=True):
+                col_info, col_del = st.columns([5, 1])
                 
-                progress_bar.progress((idx + 1) / total)
+                with col_info:
+                    # Ligne 1 : Titre de la prestation et Client
+                    st.markdown(f"### {item['nom_presta']}")
+                    
+                    # Ligne 2 : Badge Client et Date
+                    st.markdown(f"**👤 Client :** {item['client_name']} | **📅 Date :** {item['date']}")
+                    
+                    # Ligne 3 : Commentaire (si existant)
+                    if item['commentaire']:
+                        st.markdown(f"*💬 {item['commentaire']}*")
+                    else:
+                        st.caption("Aucun commentaire ajouté.")
+                
+                with col_del:
+                    # Centrage vertical du bouton de suppression
+                    st.write("##") # Petit espace pour aligner le bouton au milieu
+                    if st.button("🗑️", key=f"del_cart_{index}", help="Retirer cette intervention"):
+                        st.session_state.multi_interventions.pop(index)
+                        st.rerun()
+        
+        if st.button("🚀 TOUT ENREGISTRER", type="primary", use_container_width=True):
+            conf = api.get_notion_config()
+            for inter in st.session_state.multi_interventions:
+                ph_list = []
+                for f in inter['photos']:
+                    u = api.upload_image_to_cloud(f)
+                    if u: ph_list.append({"name": f.name, "external": {"url": u}})
+                
+                u_c = api.upload_image_to_cloud(api.convert_canvas_to_image(inter['canvas_client_data']))
+                u_i = api.upload_image_to_cloud(api.convert_canvas_to_image(inter['canvas_inter_data']))
+                
+                props = {
+                    "Date Intervention": {"date": {"start": inter['date']}},
+                    "Client": {"relation": [{"id": inter['client_id']}]},
+                    "Lien Prestation": {"relation": [{"id": inter['id_presta']}]},
+                    "Commentaire": {"rich_text": [{"text": {"content": inter['commentaire']}}]},
+                    "Intervenants": {"relation": [{"id": inter['intervenant_id']}]}
+                }
+                if ph_list: props["Preuves"] = {"files": ph_list}
+                if u_c: props["Signature Client"] = {"files": [{"name": "sc.png", "external": {"url": u_c}}]}
+                if u_i: props["Signature Intervenant"] = {"files": [{"name": "si.png", "external": {"url": u_i}}]}
+                
+                api.create_intervention_page({"parent": {"database_id": conf['db_interventions']}, "properties": props})
             
-            if success_count == total and total > 0:
-                st.session_state.multi_interventions = []
-                show_success_modal(success_count)
+            count = len(st.session_state.multi_interventions)
+            st.session_state.multi_interventions = []
+            show_success_modal(count)

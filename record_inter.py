@@ -31,7 +31,7 @@ def get_notion_config():
     }
 
     return {
-        "token": token,  # Ajouté pour create_intervention_page
+        "token": token,
         "headers": headers,
         "db_clients": db_clients,
         "db_prestations": db_prestations,
@@ -43,7 +43,6 @@ def get_notion_config():
 
 def convert_canvas_to_image(canvas_data):
     """Transforme l'array du canvas en fichier PNG pour Cloudinary."""
-    # Vérification : le canvas contient-il du dessin ? (Pixel alpha > 0)
     if canvas_data is not None and np.any(canvas_data[:, :, 3] > 0):
         img = Image.fromarray(canvas_data.astype('uint8'), 'RGBA')
         byte_io = io.BytesIO()
@@ -64,7 +63,6 @@ def upload_image_to_cloud(image_file):
     )
     
     try:
-        # Si c'est un fichier Streamlit, on remet au début
         if hasattr(image_file, 'seek'):
             image_file.seek(0)
             
@@ -154,55 +152,67 @@ def get_prestations_for_client(id_client):
     return {get_title(p, 'Prestation'): p['id'] for p in prestas_data}
 
 def get_interventions_history(user_data):
-    # 1. On récupère le dictionnaire de config
     config = get_notion_config()
-    
-    # 2. On extrait les headers et l'ID de la base de données
     headers = config["headers"]
     db_id = config["db_interventions"]
     
-    # 3. Vérification du rôle (Admin vs Intervenant)
-    is_admin = any(role in ["Gérant", "Manager"] for role in user_data['roles'])
-    
+    is_admin = any(role in ["Gérant", "Manager", "Admin"] for role in user_data['roles'])
     url = f"https://api.notion.com/v1/databases/{db_id}/query"
     
     payload = {
         "sorts": [{"property": "Date Intervention", "direction": "descending"}]
     }
     
-    # Si l'utilisateur n'est pas admin, on filtre par son ID
     if not is_admin:
         payload["filter"] = {
             "property": "Intervenants",
             "relation": {"contains": user_data['id']}
         }
     
-    # 4. Appel API avec les headers extraits de la config
     res = requests.post(url, headers=headers, json=payload)
-    
     if res.status_code == 200:
         return res.json().get('results', [])
-    else:
-        # En cas d'erreur, on peut logger pour débugger
-        print(f"Erreur Notion: {res.status_code} - {res.text}")
-        return []
+    return []
 
 # --- ENREGISTREMENT FINAL ---
 
 def create_intervention_page(payload):
     config = get_notion_config()
     url = "https://api.notion.com/v1/pages"
-    
-    # Utilisation du token récupéré via config
     headers = config['headers']
 
-    print("\n--- DEBUG ENVOI NOTION ---")
     response = requests.post(url, json=payload, headers=headers)
-    
-    if response.status_code in [200, 201]:
-        print("✅ Notion a accepté l'enregistrement !")
-    else:
-        print(f"❌ Erreur Notion ({response.status_code})")
-        print(f"Détail : {response.text}")
-        
     return response
+
+# --- NOUVELLES FONCTIONS : MODIFICATION ET SUPPRESSION ---
+
+def delete_intervention(page_id):
+    """Archive une page Notion (équivalent à la suppression)."""
+    config = get_notion_config()
+    url = f"https://api.notion.com/v1/pages/{page_id}"
+    
+    # Dans Notion, on ne supprime pas physiquement, on archive.
+    payload = {"archived": True}
+    
+    response = requests.patch(url, json=payload, headers=config['headers'])
+    
+    if response.status_code == 200:
+        return True
+    else:
+        print(f"Erreur Suppression Notion : {response.text}")
+        return False
+
+def update_intervention(page_id, properties_payload):
+    """Met à jour les propriétés d'une page Notion existante."""
+    config = get_notion_config()
+    url = f"https://api.notion.com/v1/pages/{page_id}"
+    
+    payload = {"properties": properties_payload}
+    
+    response = requests.patch(url, json=payload, headers=config['headers'])
+    
+    if response.status_code == 200:
+        return True
+    else:
+        print(f"Erreur Mise à jour Notion : {response.text}")
+        return False

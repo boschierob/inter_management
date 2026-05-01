@@ -31,33 +31,41 @@ headers_notion = {
 }
 
 def extract_text(prop):
-    """Extrait proprement le texte brut des structures complexes de Notion"""
-    if not prop: return ""
+    """
+    Extrait proprement le texte brut des structures complexes de Notion (Rollups, Rich Text, Numbers).
+    """
+    if not prop: 
+        return ""
+    
     p_type = prop.get('type')
     
     if p_type == 'rollup':
         r_data = prop.get('rollup', {})
         r_type = r_data.get('type')
+        
         if r_type == 'array':
             items = r_data.get('array', [])
-            if not items: return ""
+            if not items: 
+                return ""
             return extract_text(items[0])
         elif r_type == 'number':
-            return str(r_data.get('number', ''))
+            val = r_data.get('number')
+            return str(val) if val is not None else ""
         elif r_type == 'rich_text':
             texts = r_data.get('rich_text', [])
             return "".join([t.get('plain_text', '') for t in texts]).strip()
 
     content = prop.get('rich_text') or prop.get('title')
+    
     if content is None:
         inner_type = prop.get('type')
         if inner_type in prop:
             content = prop[inner_type]
 
-    if isinstance(content, list) and len(content) > 0:
-        return content[0].get('plain_text', "").strip()
+    if isinstance(content, list):
+        return "".join([t.get('plain_text', '') for t in content]).strip()
     
-    return ""
+    return str(content).strip() if content is not None else ""
 
 def sync_tally_to_notion_relations():
     url = f"https://api.notion.com/v1/databases/{NOTION_INTERVENTIONS_DB_ID}/query"
@@ -70,20 +78,28 @@ def sync_tally_to_notion_relations():
             if transit:
                 requests.patch(f"https://api.notion.com/v1/pages/{page['id']}", headers=headers_notion, json={"properties": {"Lien Prestation": {"relation": [{"id": transit}]}}})
         if pages: time.sleep(2)
-    except Exception as e: logger.error(f"Synchro fail: {e}")
+    except Exception as e: 
+        logger.error(f"Synchro fail: {e}")
 
 def update_notion_status(page_ids):
     for pid in page_ids:
         requests.patch(f"https://api.notion.com/v1/pages/{pid}", headers=headers_notion, json={"properties": {"Status": {"status": {"name": "Facturé"}}}})
 
 def generer_factures():
+    # 1. On lance d'abord le nettoyage (Attention: nécessite une action dans le terminal si doublons trouvés)
+    logger.info("Démarrage du nettoyage préalable...")
     notion_cleanup.cleanup_relation_db()
+    
+    # 2. On synchronise les nouvelles entrées Tally
+    logger.info("Synchronisation Tally -> Notion...")
     sync_tally_to_notion_relations()
     
+    # 3. Récupération des interventions à facturer
     url = f"https://api.notion.com/v1/databases/{NOTION_INTERVENTIONS_DB_ID}/query"
     res = requests.post(url, headers=headers_notion, json={"filter": {"property": "Status", "status": {"equals": "A facturer"}}})
     interventions = res.json().get("results", [])
-    if not interventions: return logger.info("Rien à facturer.")
+    if not interventions: 
+        return logger.info("Rien à facturer.")
 
     groupes = defaultdict(list)
     noms_clients = {}
@@ -94,23 +110,20 @@ def generer_factures():
         pid = row['id']
 
         q_id = extract_text(props.get('ID Client Qonto'))
-        c_name = extract_text(props.get('Nom Client'))
+        c_name = extract_text(props.get('Client Nom')) # CORRIGÉ ICI (Anciennement 'Nom Client')
         
         if not q_id:
-            logger.warning(f"Ligne {i+1} : ID Qonto manquant. Ignorée.")
+            logger.warning(f"Ligne {i+1} : ID Qonto manquant pour {c_name}. Ignorée.")
             continue
 
         d_val = props.get('Date Intervention', {}).get('date', {}).get('start')
         if not d_val: continue
         d_obj = datetime.strptime(d_val, "%Y-%m-%d")
         
-        # On extrait l'année, le mois (numéro) et la date courte
         annee = d_obj.strftime("%Y")
         mois_num = d_obj.strftime("%m")
-        mois_nom = d_obj.strftime("%B") # Optionnel pour le log
         d_court = d_obj.strftime("%d/%m")
 
-        # Extraction Prestations / Prix / Descriptions
         rel_prestas = props.get('Lien Prestation', {}).get('relation', [])
         ids_presta = [r['id'] for r in rel_prestas]
         
@@ -119,10 +132,16 @@ def generer_factures():
         for t in r_titre:
             titre_list.append(extract_text(t))
 
+        # SÉCURITÉ AJOUTÉE : Gestion robuste du Rollup "Montant HT"
         prix_list = []
-        r_prix = props.get('Montant HT', {}).get('rollup', {}).get('array', [])
-        for p in r_prix:
-            if p.get('type') == 'number': prix_list.append(p['number'])
+        montant_prop = props.get('Montant HT', {})
+        if montant_prop.get('type') == 'rollup':
+            r_type = montant_prop['rollup'].get('type')
+            if r_type == 'array':
+                for p in montant_prop['rollup']['array']:
+                    if p.get('type') == 'number': prix_list.append(p['number'])
+            elif r_type == 'number':
+                prix_list.append(montant_prop['rollup']['number'])
 
         desc_list = []
         r_desc = props.get('Description', {}).get('rollup', {}).get('array', [])
@@ -136,7 +155,6 @@ def generer_factures():
             val_prix = prix_list[j]
             
             if val_prix > 0:
-                # IMPORTANT : On ajoute le mois_num dans les données pour pouvoir grouper par mois ensuite
                 groupes[(q_id, annee)].append({
                     "uid": presta_uid,
                     "mois": mois_num, 
@@ -148,13 +166,12 @@ def generer_factures():
 
         noms_clients[q_id] = c_name if c_name else f"ID_{q_id}"
         pages_par_groupe[(q_id, annee)].append(pid)
-        logger.info(f"✅ Ligne {i+1} validée : {noms_clients[q_id]}")
+        logger.info(f"✅ Ligne validée : {noms_clients[q_id]} ({d_court})")
 
     # --- 5. ENVOI QONTO ---
     headers_q = {"Authorization": f"{QONTO_LOGIN}:{QONTO_SECRET}", "Content-Type": "application/json"}
     
     for (q_id, annee), items in groupes.items():
-        # LA CLÉ DE FUSION CHANGE : (ID Prestation, Prix, Mois)
         fusion = {}
         for it in items:
             k = (it['uid'], it['price'], it['mois'])
@@ -164,19 +181,16 @@ def generer_factures():
             fusion[k]["qty"] += 1
 
         q_items = []
-        # On trie la fusion par mois (3ème élément de la clé k)
         sorted_keys = sorted(fusion.keys(), key=lambda x: x[2])
 
         for k in sorted_keys:
             data = fusion[k]
             px = k[1]
             
-            # Tri chronologique des dates à l'intérieur du mois
             dates_list = list(data["dates"])
             dates_list.sort(key=lambda x: (int(x.split('/')[1]), int(x.split('/')[0])))
             dates_label = ", ".join(dates_list)
             
-            # Construction de la ligne
             full_description = f"{data['desc']}\nDates d'intervention : {dates_label}".strip()
 
             q_items.append({
@@ -197,7 +211,7 @@ def generer_factures():
 
         res = requests.post("https://thirdparty.qonto.com/v2/client_invoices", json=payload, headers=headers_q)
         if res.status_code == 201:
-            logger.info(f"🚀 Brouillon créé pour {noms_clients[q_id]} (Regroupement par mois)")
+            logger.info(f"🚀 Brouillon créé pour {noms_clients[q_id]} (Mois facturés: {', '.join(set([k[2] for k in sorted_keys]))})")
             update_notion_status(pages_par_groupe[(q_id, annee)])
         else:
             logger.error(f"❌ Erreur Qonto pour {noms_clients[q_id]} : {res.text}")
