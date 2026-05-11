@@ -5,6 +5,7 @@
 # On autorise exceptionnellement ces fichiers
 !app.py
 !record_inter.py
+!email_engine.py
 !.gitignore
 !requirements.txt   
 
